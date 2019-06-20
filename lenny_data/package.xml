@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>pir_lenny_robot</name>
+  <name>lenny_data</name>
   <version>0.0.0</version>
-  <description>The pir_lenny_robot package</description>
+  <description>The lenny_data package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->
@@ -19,7 +19,7 @@
   <!-- Url tags are optional, but multiple are allowed, one per tag -->
   <!-- Optional attribute type can be: website, bugtracker, or repository -->
   <!-- Example: -->
-  <!-- <url type="website">http://wiki.ros.org/pir_lenny_robot</url> -->
+  <!-- <url type="website">http://wiki.ros.org/lenny_data</url> -->
 
 
   <!-- Author tags are optional, multiple are allowed, one per tag -->
@@ -49,17 +49,11 @@
   <!-- Use doc_depend for packages you need only for building documentation: -->
   <!--   <doc_depend>doxygen</doc_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
-<exec_depend>lenny_bringup</exec_depend>
-  <exec_depend>lenny_fake_components</exec_depend>
-  <exec_depend>lenny_moveit_config</exec_depend>
-  <exec_depend>lenny_description</exec_depend>
-  <exec_depend>lenny_data</exec_depend>
-  <exec_depend>lenny_state_machine</exec_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
     <!-- Other tools can request additional information be placed here -->
-    <metapackage/>
+
   </export>
 </package>
