@@ -3,11 +3,12 @@ import roslib
 import smach
 
 
+from states.fake_states import MoveRobotHome
 from states.fake_states import WaitFake
 
-        
-        
 
+        
+        
 def makeInitMasterSM():
 	sm = smach.StateMachine(outcomes=['success','error'])
 	
@@ -55,10 +56,10 @@ def makeInitMasterSM():
 		
 		# Move robot to home position.
 		smach.StateMachine.add(
-				'MOME_HOME',MoveRobotHome(),
+				'MOVE_HOME',MoveRobotHome(),
 				transitions = {
 					'done':'success',
 					'error':'error'}
 		)
 		
-return sm
+	return sm

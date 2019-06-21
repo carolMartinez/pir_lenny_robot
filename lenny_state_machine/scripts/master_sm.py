@@ -8,7 +8,7 @@ import actionlib
 
 
 
-from states.init_master import makeInitStateMachineMaster
+from states.initialize_master_sm import makeInitMasterSM
 from states.fake_states import WaitFake
 
 
@@ -17,7 +17,7 @@ from states.fake_states import WaitFake
         
 def main():
   
-    rospy.init_node('maste_smr')
+    rospy.init_node('master_sm')
 
     sm_root = smach.StateMachine(outcomes=[ 'done', 'error'])
     
@@ -26,24 +26,26 @@ def main():
     with sm_root:
       
         
-        smach.StateMachine.add('INIT', makeInitMasterSM(),
+        smach.StateMachine.add('INIT_MASTER_SM', makeInitMasterSM(),
                               transitions={'success': 'FAKE_STATE',
                                             'error' : 'error'})
         smach.StateMachine.add('FAKE_STATE', WaitFake(),
-                              transitions={'need_tool': 'error',
-                                            'error' : 'error'})
+                              transitions={'need_tool': 'MOVE_HOME_PICK_TOOL',
+                                            'error' : 'error',
+											'done' : 'done'})
                               
                                         
 
     # Create and start the introspection server
-    intro_server = smach_ros.IntrospectionServer('my_smach_introspection_server', sm_root, '/SM_ROOT')
-    intro_server.start()
+    sis = smach_ros.IntrospectionServer('my_smach_introspection_server', sm_root, '/SM_ROOT')
+    sis.start()
     
     outcome = sm_root.execute()
     
     if (outcome == 'error'):
-        siss.stop()
-        
+        sis.stop()
+    #else:
+	#	rospy.spin()
     
 
 if __name__ == '__main__':

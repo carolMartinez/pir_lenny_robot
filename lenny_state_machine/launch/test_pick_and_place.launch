@@ -9,6 +9,8 @@
   
  
     <node type="master_sm.py" pkg="lenny_state_machine" name="master_sm" output="screen" required="true" />
+    <node type="tool_master_sm.py" pkg="lenny_state_machine" name="tool_master_sm" output="screen" required="true" />
+    <node type="pick_tool_sm.py" pkg="lenny_state_machine" name="pick_tool_sm" output="screen" required="true" />
   
 </launch>
 

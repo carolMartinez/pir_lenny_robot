@@ -19,7 +19,22 @@ class MoveRobotHome(smach.State):
       return 'error'
     else:
       return 'done'
-      
+  
+class MoveHomePickTools(smach.State):
+  def __init__(self):
+    smach.State.__init__(self, outcomes=['pick','place','error'],
+                                input_keys=['print_input'],
+                                output_keys=['print_output'])
+
+  def execute(self, userdata):
+    rospy.loginfo('MOVE HOME PICK TOOLS STATE')
+    rospy.sleep(5)
+    if self.preempt_requested():
+      self.service_preempt()
+      return 'error'
+    else:
+      return 'pick'
+          
         
       
 
@@ -35,6 +50,79 @@ class WaitFake(smach.State):
       return 'error'
     else:
       return 'need_tool'
+
+
+class InitializeToolMasterSM(smach.State):
+  def __init__(self):
+    smach.State.__init__(self, outcomes=['done','error'])
+
+  def execute(self, userdata):
+    rospy.loginfo('INITIALIZE TOOL MASTER STATE')
+    rospy.sleep(5)
+    if self.preempt_requested():
+      self.service_preempt()
+      return 'error'
+    else:
+      return 'done'
+
+
+class PlanCoarseMotion(smach.State):
+  def __init__(self):
+    smach.State.__init__(self, outcomes=['success','error'])
+
+  def execute(self, userdata):
+    rospy.loginfo('PLAN COARSE MOTION')
+    rospy.sleep(5)
+    if self.preempt_requested():
+      self.service_preempt()
+      return 'error'
+    else:
+      return 'success'
+
+
+class MoveCoarseMotion(smach.State):
+  def __init__(self):
+    smach.State.__init__(self, outcomes=['success','error'])
+
+  def execute(self, userdata):
+    rospy.loginfo('MOVE COARSE MOTION')
+    rospy.sleep(5)
+    if self.preempt_requested():
+      self.service_preempt()
+      return 'error'
+    else:
+      return 'success'
+
+
+class PlanFineMotion(smach.State):
+  def __init__(self):
+    smach.State.__init__(self, outcomes=['success','error'])
+
+  def execute(self, userdata):
+    rospy.loginfo('PLAN FINE MOTION')
+    rospy.sleep(5)
+    if self.preempt_requested():
+      self.service_preempt()
+      return 'error'
+    else:
+      return 'success'
+
+ 
+class MoveFineMotion(smach.State):
+  def __init__(self):
+    smach.State.__init__(self, outcomes=['success','error'])
+
+  def execute(self, userdata):
+    rospy.loginfo('MOVE FINE MOTION')
+    rospy.sleep(5)
+    if self.preempt_requested():
+      self.service_preempt()
+      return 'error'
+    else:
+      return 'success'
+     
+        
+        
       
         
         
