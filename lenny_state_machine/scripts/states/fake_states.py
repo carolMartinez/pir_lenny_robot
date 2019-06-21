@@ -34,7 +34,22 @@ class MoveHomePickTools(smach.State):
       return 'error'
     else:
       return 'pick'
+
           
+class MoveHomePickBottles(smach.State):
+  def __init__(self):
+    smach.State.__init__(self, outcomes=['success','error', 'continue'],
+                                input_keys=['print_input'],
+                                output_keys=['print_output'])
+
+  def execute(self, userdata):
+    rospy.loginfo('MOVE HOME PICK BOTTLES STATE')
+    rospy.sleep(5)
+    if self.preempt_requested():
+      self.service_preempt()
+      return 'error'
+    else:
+      return 'continue'
         
       
 
@@ -72,7 +87,7 @@ class PlanCoarseMotion(smach.State):
 
   def execute(self, userdata):
     rospy.loginfo('PLAN COARSE MOTION')
-    rospy.sleep(5)
+    rospy.sleep(50)
     if self.preempt_requested():
       self.service_preempt()
       return 'error'

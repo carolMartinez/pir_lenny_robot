@@ -21,21 +21,21 @@ def makePickToolSM():
 		)
 		
 		smach.StateMachine.add(
-				'MOVE_COARSE',makePickToolSM(),
+				'MOVE_COARSE',MoveCoarseMotion(),
 				transitions = {
 					'success':'PLAN_FINE',
 					'error':'error'}
 		)
 				
 		smach.StateMachine.add(
-				'PLAN_FINE',MoveRobotHome(),
+				'PLAN_FINE',PlanFineMotion(),
 				transitions = {
 					'success':'MOVE_FINE',
 					'error':'error'}
 		)
 		## TODO: change for makePlaceToolSM
 		smach.StateMachine.add(
-				'MOVE_FINE',makePickToolSM(),
+				'MOVE_FINE',MoveFineMotion(),
 				transitions = {
 					'success':'success',
 					'error':'error'}

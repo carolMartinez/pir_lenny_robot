@@ -5,11 +5,13 @@ import smach
 
 from states.fake_states import MoveRobotHome
 from states.fake_states import WaitFake
+from states.tool_master_sm import makeToolMasterSM
 
 
         
         
 def makeInitMasterSM():
+	
 	sm = smach.StateMachine(outcomes=['success','error'])
 	
 	with sm:
@@ -61,5 +63,7 @@ def makeInitMasterSM():
 					'done':'success',
 					'error':'error'}
 		)
+		
+		
 		
 	return sm
