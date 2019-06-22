@@ -18,39 +18,33 @@ def makeToolMasterSM():
     
     #rospy.init_node('tool_master_sm')
 
-	sm = smach.StateMachine(outcomes=['success','error', 'continue'])
+	sm = smach.StateMachine(outcomes=['success','error'])
 	
 	with sm:
 		
-		smach.StateMachine.add(
-				'INITIALIZE',InitializeToolMasterSM(),
-				transitions = {
-					'done':'MOVE_HOME_PICK_TOOLS',
-					'error':'error'}
-		)
+		
 		
 		# Move robot to home position.
 		smach.StateMachine.add(
 				'MOVE_HOME_PICK_TOOLS',MoveHomePickTools(),
 				transitions = {
-					'pick':'MOVE_HOME_PICK_BOTTLES',
-					'place':'MOVE_HOME_PICK_BOTTLES',
+					'pick':'PICK_TOOL_SM',
+					'place':'PICK_TOOL_SM',
 					'error':'error'}
 		)
 		
-		#smach.StateMachine.add(
-		#		'PICK_TOOL_SM',makePickToolSM(),
-		#		transitions = {
-		#			'success':'success',
-		#			'error':'error'}
-		#)
+		smach.StateMachine.add(
+				'PICK_TOOL_SM',makePickToolSM(),
+				transitions = {
+					'success':'MOVE_HOME_PICK_BOTTLES',
+					'error':'error'}
+		)
 				
 		smach.StateMachine.add(
 				'MOVE_HOME_PICK_BOTTLES',MoveHomePickBottles(),
 				transitions = {
 					'success':'success',
-					'error':'error',
-					'continue':'continue'}
+					'error':'error'}
 		)
 		## TODO: change for makePlaceToolSM
 		#smach.StateMachine.add(

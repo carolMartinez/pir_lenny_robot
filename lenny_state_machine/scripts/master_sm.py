@@ -10,6 +10,7 @@ import actionlib
 
 from states.initialize_master_sm import makeInitMasterSM
 from states.fake_states import WaitFake
+from states.fake_states import WaitFake2
 #from states.tool_master_sm import *
 
 from states.tool_master_sm import makeToolMasterSM
@@ -28,29 +29,25 @@ def main():
       
         
         smach.StateMachine.add('INIT_MASTER_SM', makeInitMasterSM(),
-                              transitions={'success': 'FAKE_STATE',
+							transitions={'success': 'FAKE_STATE',
                                             'error' : 'error'})
                                          
         smach.StateMachine.add('FAKE_STATE', WaitFake(),
-                              transitions={'need_tool': 'TOOL_STATE',
-                                            'error' : 'error'})
+							transitions={'success':'FAKE_STATE_2',
+											'need_tool': 'TOOL_STATE',
+											'error' : 'error'})
         smach.StateMachine.add('TOOL_STATE',makeToolMasterSM(),
-				transitions = {
-					'success':'FAKE_STATE',
-					'error':'error',
-					'continue': 'error'})
-
-		#smach.StateMachine.add('DONE',FinishSM(),
-		#		transitions = {
-		#			'success':'error',
-		#			'error':'error'}
-					
-		#)                         
-                                        
-
-    # Create and start the introspection server
-    sis = smach_ros.IntrospectionServer('my_smach_introspection_server', sm_root, '/SM_ROOT')
-    sis.start()
+							transitions = {'success':'FAKE_STATE_2',
+											'error':'error'})
+                                    
+        smach.StateMachine.add('FAKE_STATE_2', WaitFake2(),
+							transitions = {'success':'error',
+											'error':'error'})
+								
+		
+	# Create and start the introspection server
+	sis = smach_ros.IntrospectionServer('my_smach_introspection_server', sm_root, '/SM_ROOT')
+	sis.start()
     
     outcome = sm_root.execute()
     

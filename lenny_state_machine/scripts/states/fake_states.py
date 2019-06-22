@@ -38,7 +38,7 @@ class MoveHomePickTools(smach.State):
           
 class MoveHomePickBottles(smach.State):
   def __init__(self):
-    smach.State.__init__(self, outcomes=['success','error', 'continue'],
+    smach.State.__init__(self, outcomes=['success','error'],
                                 input_keys=['print_input'],
                                 output_keys=['print_output'])
 
@@ -49,13 +49,13 @@ class MoveHomePickBottles(smach.State):
       self.service_preempt()
       return 'error'
     else:
-      return 'continue'
+      return 'success'
         
       
 
 class WaitFake(smach.State):
   def __init__(self):
-    smach.State.__init__(self, outcomes=['need_tool','error'])
+    smach.State.__init__(self, outcomes=['success','need_tool','error'])
 
   def execute(self, userdata):
     rospy.loginfo('FAKE WAIT STATE')
@@ -64,7 +64,22 @@ class WaitFake(smach.State):
       self.service_preempt()
       return 'error'
     else:
-      return 'need_tool'
+      return 'success'
+
+      
+
+class WaitFake2(smach.State):
+  def __init__(self):
+    smach.State.__init__(self, outcomes=['success','error'])
+
+  def execute(self, userdata):
+    rospy.loginfo('FAKE WAIT 2 STATE')
+    rospy.sleep(5)
+    if self.preempt_requested():
+      self.service_preempt()
+      return 'error'
+    else:
+      return 'success'
 
 
 class InitializeToolMasterSM(smach.State):
@@ -87,7 +102,7 @@ class PlanCoarseMotion(smach.State):
 
   def execute(self, userdata):
     rospy.loginfo('PLAN COARSE MOTION')
-    rospy.sleep(50)
+    rospy.sleep(5)
     if self.preempt_requested():
       self.service_preempt()
       return 'error'
