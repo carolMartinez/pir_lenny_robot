@@ -29,8 +29,8 @@ def main():
       
         
         smach.StateMachine.add('INIT_MASTER_SM', makeInitMasterSM(),
-							transitions={'success': 'FAKE_STATE',
-                                            'error' : 'error'})
+							transitions={'succeeded': 'FAKE_STATE',
+                                            'aborted' : 'error'})
                                          
         smach.StateMachine.add('FAKE_STATE', WaitFake(),
 							transitions={'success':'FAKE_STATE_2',

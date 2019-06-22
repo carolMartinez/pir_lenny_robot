@@ -1,0 +1,7 @@
+#Move to home from anywhere
+string pose_name
+string move_group
+
+---
+bool success
+

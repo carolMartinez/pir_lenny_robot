@@ -6,14 +6,18 @@ import smach
 from states.fake_states import MoveRobotHome
 from states.fake_states import WaitFake
 from states.tool_master_sm import makeToolMasterSM
-
-
+from lenny_msgs.srv import *
+from smach_ros import ServiceState
         
         
 def makeInitMasterSM():
 	
-	sm = smach.StateMachine(outcomes=['success','error'])
-	
+	sm = smach.StateMachine(outcomes=['succeeded','aborted'])
+
+	req = MoveToHomeRequest()
+	req.pose_name = "HOME"
+	req.move_group = "arm_right"
+
 	with sm:
 		# Configure camera node.
 		#smach.StateMachine.add(
@@ -55,15 +59,16 @@ def makeInitMasterSM():
 		#)
 		#
     
-		
-		# Move robot to home position.
-		smach.StateMachine.add(
-				'MOVE_HOME',MoveRobotHome(),
-				transitions = {
-					'done':'success',
-					'error':'error'}
+		# Move robot to home position
+		smach.StateMachine.add('MOVE_HOME',ServiceState('/motion_executor/move_to_home',MoveToHome,request=req),transitions = {
+					'succeeded':'succeeded',
+					'aborted':'aborted'}
 		)
+
+
+
 		
-		
-		
+
+
+					
 	return sm
