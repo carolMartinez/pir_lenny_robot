@@ -64,7 +64,7 @@ class WaitFake(smach.State):
       self.service_preempt()
       return 'error'
     else:
-      return 'success'
+      return 'need_tool'
 
       
 

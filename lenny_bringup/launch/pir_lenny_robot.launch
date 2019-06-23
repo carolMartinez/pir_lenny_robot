@@ -8,7 +8,7 @@
   <arg name="fake_pose_estimator" default="false"/>
   <arg name="fake_bin_estimator" default="false"/>
   <arg name="fake_tool_estimator" default="false"/>
-  <arg name="fake_robot" default="false"/>
+  <arg name="fake_robot" default="true"/>
   
   <!-- By default, we are not in debug mode -->
   <arg name="debug" default="false" />
@@ -28,7 +28,14 @@
   <!-- RUN STATE MACHINE -->
   <include file="$(find lenny_state_machine)/launch/test_pick_and_place.launch"/>
   
-  
+  <!-- Start the motion executor. -->
+	<node name="motion_executor" pkg="lenny_motion" type="motion_executor" output="screen" />
+	<!--	<param name="yaml_path" value="$(find apc16delft_data)/trajectories/" />
+		<param name="calibration_trajectory_length" value="15" />
+		<param name="trajectory_velocity_scaling" value="0.2" unless="$(arg fake_robot)"/>
+		<param name="trajectory_velocity_scaling" value="0.5"      if="$(arg fake_robot)"/>
+	</node> -->
+
   
   <!-- to load params-->
   <!--<rosparam command="load" file="$(find pick_and_place)/config/motomanSDA10F/pick_and_place_parameters_right.yaml"/>-->

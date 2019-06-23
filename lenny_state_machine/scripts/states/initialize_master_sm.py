@@ -15,7 +15,7 @@ def makeInitMasterSM():
 	sm = smach.StateMachine(outcomes=['succeeded','aborted'])
 
 	req = MoveToHomeRequest()
-	req.pose_name = "HOME"
+	req.pose_name = "PICK_WAIT"
 	req.move_group = "arm_right"
 
 	with sm:
@@ -62,7 +62,8 @@ def makeInitMasterSM():
 		# Move robot to home position
 		smach.StateMachine.add('MOVE_HOME',ServiceState('/motion_executor/move_to_home',MoveToHome,request=req),transitions = {
 					'succeeded':'succeeded',
-					'aborted':'aborted'}
+					'aborted':'aborted',
+					'preempted':'aborted'}
 		)
 
 
