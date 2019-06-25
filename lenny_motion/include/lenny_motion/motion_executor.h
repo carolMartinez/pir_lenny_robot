@@ -30,6 +30,9 @@
 #include <ros/callback_queue.h>
 #include <Eigen/Geometry>
 
+#include "motion_utilities.h"
+
+
 namespace pirLenny {
 
 class MotionExecutor {
@@ -71,6 +74,8 @@ private:
 	moveit::planning_interface::MoveGroupInterface::Plan plan_;
 	
 	robot_state::RobotStatePtr rs_;
+  
+  MotionUtilities motion_utilities_;
 
 protected:
 	/*bool executeCoarseMotion(apc16delft_msgs::ExecuteCoarseMotion::Request & req, apc16delft_msgs::ExecuteCoarseMotion::Response & res);

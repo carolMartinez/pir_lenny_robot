@@ -355,17 +355,27 @@ bool MotionExecutor::moveToHome(lenny_msgs::MoveToHome::Request & req, lenny_msg
 	bool success = (current_group_->execute(motion_plan)== moveit::planning_interface::MoveItErrorCode::SUCCESS);
 //bool success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
 
-//ROS_INFO_STREAM("UPDATING ROBOT STATE ");
+  ROS_INFO_STREAM("UPDATING ROBOT STATE ");
 		
-
+//TODO: test this new function.
+  //motion_utilities_.waitForRobotToStop();
+  //ros::Duration(1.5).sleep();
+  
+  success=motion_utilities_.waitForRobotToStopStatus();
+  ros::Duration(1.5).sleep();
 	if (!success)
 	{
 		ROS_ERROR_STREAM("Failed to execute motion.");
 		return false;
 	}
+  else
+  {
+    	ROS_INFO("Finished execution.");
+      return true;
+    
+  }
 
 	
-	return true;
 }
 
 /*

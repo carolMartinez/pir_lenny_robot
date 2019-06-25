@@ -1,16 +1,17 @@
 Panels:
   - Class: rviz/Displays
-    Help Height: 84
+    Help Height: 0
     Name: Displays
     Property Tree Widget:
       Expanded:
         - /Global Options1
         - /MotionPlanning1
+        - /MotionPlanning1/Scene Robot1
         - /MotionPlanning1/Planning Request1
         - /MotionPlanning1/Planned Path1
         - /TF1/Frames1
       Splitter Ratio: 0.742560029
-    Tree Height: 274
+    Tree Height: 237
   - Class: rviz/Help
     Name: Help
   - Class: rviz/Views
@@ -39,14 +40,11 @@ Visualization Manager:
       Plane Cell Count: 10
       Reference Frame: <Fixed Frame>
       Value: true
-    - Acceleration_Scaling_Factor: 1
-      Class: moveit_rviz_plugin/MotionPlanning
+    - Class: moveit_rviz_plugin/MotionPlanning
       Enabled: true
       Move Group Namespace: ""
       MoveIt_Allow_Approximate_IK: false
       MoveIt_Allow_External_Program: false
-      MoveIt_Allow_Replanning: false
-      MoveIt_Allow_Sensor_Positioning: false
       MoveIt_Goal_Tolerance: 0
       MoveIt_Planning_Attempts: 10
       MoveIt_Planning_Time: 5
@@ -72,16 +70,6 @@ Visualization Manager:
           Expand Link Details: false
           Expand Tree: false
           Link Tree Style: Links in Alphabetic Order
-          MPS_FAKE:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          arm_left_gripper_support:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
           arm_left_link_1_s:
             Alpha: 1
             Show Axes: false
@@ -240,6 +228,66 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
+          finger_1_link_0:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          finger_1_link_1:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          finger_1_link_2:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          finger_1_link_3:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          finger_2_link_0:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          finger_2_link_1:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          finger_2_link_2:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          finger_2_link_3:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          finger_middle_link_0:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          finger_middle_link_1:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          finger_middle_link_2:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          finger_middle_link_3:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
           kinect:
             Alpha: 1
             Show Axes: false
@@ -250,11 +298,65 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
+          palm:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
           real_sense_base_camera_link:
             Alpha: 1
             Show Axes: false
             Show Trail: false
-          table:
+          robotiq_85_base_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          robotiq_85_left_finger_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          robotiq_85_left_finger_tip_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          robotiq_85_left_inner_knuckle_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          robotiq_85_left_knuckle_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          robotiq_85_right_finger_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          robotiq_85_right_finger_tip_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          robotiq_85_right_inner_knuckle_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          robotiq_85_right_knuckle_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          tool0:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+          tool_table:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -279,6 +381,27 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
+          zed_camera_center:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          zed_left_camera_frame:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+          zed_left_camera_optical_frame:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+          zed_right_camera_frame:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+          zed_right_camera_optical_frame:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
         Loop Animation: false
         Robot Alpha: 0.5
         Robot Color: 150; 50; 150
@@ -324,16 +447,6 @@ Visualization Manager:
           Expand Link Details: false
           Expand Tree: false
           Link Tree Style: Links in Alphabetic Order
-          MPS_FAKE:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          arm_left_gripper_support:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
           arm_left_link_1_s:
             Alpha: 1
             Show Axes: false
@@ -492,6 +605,66 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
+          finger_1_link_0:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          finger_1_link_1:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          finger_1_link_2:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          finger_1_link_3:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          finger_2_link_0:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          finger_2_link_1:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          finger_2_link_2:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          finger_2_link_3:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          finger_middle_link_0:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          finger_middle_link_1:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          finger_middle_link_2:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          finger_middle_link_3:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
           kinect:
             Alpha: 1
             Show Axes: false
@@ -502,11 +675,65 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
+          palm:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
           real_sense_base_camera_link:
             Alpha: 1
             Show Axes: false
             Show Trail: false
-          table:
+          robotiq_85_base_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          robotiq_85_left_finger_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          robotiq_85_left_finger_tip_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          robotiq_85_left_inner_knuckle_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          robotiq_85_left_knuckle_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          robotiq_85_right_finger_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          robotiq_85_right_finger_tip_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          robotiq_85_right_inner_knuckle_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          robotiq_85_right_knuckle_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          tool0:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+          tool_table:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -531,20 +758,36 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
-        Robot Alpha: 0.5
+          zed_camera_center:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          zed_left_camera_frame:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+          zed_left_camera_optical_frame:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+          zed_right_camera_frame:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+          zed_right_camera_optical_frame:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+        Robot Alpha: 1
         Show Robot Collision: false
-        Show Robot Visual: false
+        Show Robot Visual: true
       Value: true
-      Velocity_Scaling_Factor: 1
     - Class: rviz/TF
       Enabled: true
       Frame Timeout: 15
       Frames:
         All Enabled: false
-        MPS_FAKE:
-          Value: false
-        arm_left_gripper_support:
-          Value: false
         arm_left_link_1_s:
           Value: false
         arm_left_link_2_l:
@@ -613,14 +856,60 @@ Visualization Manager:
           Value: false
         feeder_table_2:
           Value: false
+        finger_1_link_0:
+          Value: true
+        finger_1_link_1:
+          Value: true
+        finger_1_link_2:
+          Value: true
+        finger_1_link_3:
+          Value: true
+        finger_2_link_0:
+          Value: true
+        finger_2_link_1:
+          Value: true
+        finger_2_link_2:
+          Value: true
+        finger_2_link_3:
+          Value: true
+        finger_middle_link_0:
+          Value: true
+        finger_middle_link_1:
+          Value: true
+        finger_middle_link_2:
+          Value: true
+        finger_middle_link_3:
+          Value: true
         kinect:
           Value: false
         kinect2:
           Value: false
+        palm:
+          Value: true
         real_sense_base_camera_link:
           Value: false
-        table:
-          Value: false
+        robotiq_85_base_link:
+          Value: true
+        robotiq_85_left_finger_link:
+          Value: true
+        robotiq_85_left_finger_tip_link:
+          Value: true
+        robotiq_85_left_inner_knuckle_link:
+          Value: true
+        robotiq_85_left_knuckle_link:
+          Value: true
+        robotiq_85_right_finger_link:
+          Value: true
+        robotiq_85_right_finger_tip_link:
+          Value: true
+        robotiq_85_right_inner_knuckle_link:
+          Value: true
+        robotiq_85_right_knuckle_link:
+          Value: true
+        tool0:
+          Value: true
+        tool_table:
+          Value: true
         torso_base_link:
           Value: false
         torso_link_b1:
@@ -629,6 +918,16 @@ Visualization Manager:
           Value: false
         worktable:
           Value: false
+        zed_camera_center:
+          Value: true
+        zed_left_camera_frame:
+          Value: true
+        zed_left_camera_optical_frame:
+          Value: true
+        zed_right_camera_frame:
+          Value: true
+        zed_right_camera_optical_frame:
+          Value: true
       Marker Scale: 1
       Name: TF
       Show Arrows: true
@@ -636,8 +935,6 @@ Visualization Manager:
       Show Names: false
       Tree:
         torso_base_link:
-          MPS_FAKE:
-            {}
           base_kinect:
             kinect:
               {}
@@ -659,11 +956,10 @@ Visualization Manager:
                   camera_right_ir_frame:
                     camera_right_ir_optical_frame:
                       {}
+            tool_table:
+              {}
           feeder_table:
             feeder_table_2:
-              {}
-          table:
-            worktable:
               {}
           torso_link_b1:
             arm_left_link_1_s:
@@ -674,10 +970,21 @@ Visualization Manager:
                       arm_left_link_6_b:
                         arm_left_link_7_t:
                           arm_left_link_tool0:
-                            arm_left_gripper_support:
-                              {}
                             arm_left_tcp_link:
                               {}
+                            robotiq_85_base_link:
+                              robotiq_85_left_inner_knuckle_link:
+                                robotiq_85_left_finger_tip_link:
+                                  {}
+                              robotiq_85_left_knuckle_link:
+                                robotiq_85_left_finger_link:
+                                  {}
+                              robotiq_85_right_inner_knuckle_link:
+                                robotiq_85_right_finger_tip_link:
+                                  {}
+                              robotiq_85_right_knuckle_link:
+                                robotiq_85_right_finger_link:
+                                  {}
             arm_right_link_1_s:
               arm_right_link_2_l:
                 arm_right_link_3_e:
@@ -690,10 +997,37 @@ Visualization Manager:
                               {}
                             arm_right_tcp_link:
                               {}
+                            palm:
+                              finger_1_link_0:
+                                finger_1_link_1:
+                                  finger_1_link_2:
+                                    finger_1_link_3:
+                                      {}
+                              finger_2_link_0:
+                                finger_2_link_1:
+                                  finger_2_link_2:
+                                    finger_2_link_3:
+                                      {}
+                              finger_middle_link_0:
+                                finger_middle_link_1:
+                                  finger_middle_link_2:
+                                    finger_middle_link_3:
+                                      {}
+                              tool0:
+                                {}
             beacon:
               {}
           torso_link_b2:
             {}
+          worktable:
+            {}
+          zed_camera_center:
+            zed_left_camera_frame:
+              zed_left_camera_optical_frame:
+                {}
+            zed_right_camera_frame:
+              zed_right_camera_optical_frame:
+                {}
       Update Interval: 0
       Value: true
   Enabled: true
@@ -735,7 +1069,7 @@ Visualization Manager:
 Window Geometry:
   Displays:
     collapsed: false
-  Height: 1056
+  Height: 776
   Help:
     collapsed: false
   Hide Left Dock: false
@@ -744,9 +1078,9 @@ Window Geometry:
     collapsed: false
   MotionPlanning - Trajectory Slider:
     collapsed: false
-  QMainWindow State: 000000ff00000000fd0000000100000000000002b8000003dafc0200000008fb000000100044006900730070006c0061007900730100000028000001a7000000d700fffffffb0000000800480065006c00700000000342000000bb0000007300fffffffb0000000a0056006900650077007300000003b0000000b0000000ad00fffffffb0000000c00430061006d00650072006100000002ff000001610000000000000000fb0000001e004d006f00740069006f006e00200050006c0061006e006e0069006e00670100000374000001890000000000000000fb0000002e004d006f00740069006f006e0050006c0061006e006e0069006e00670020002d00200053006c00690064006500720000000000ffffffff0000000000000000fb0000001c004d006f00740069006f006e0050006c0061006e006e0069006e006701000001d50000022d0000018300fffffffb00000044004d006f00740069006f006e0050006c0061006e006e0069006e00670020002d0020005400720061006a006500630074006f0072007900200053006c00690064006500720000000000ffffffff0000004a00ffffff00000481000003da00000001000000020000000100000002fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd0000000100000000000002b8000002c2fc0200000008fb000000100044006900730070006c00610079007301000000280000012e000000d700fffffffb0000000800480065006c00700000000342000000bb0000007300fffffffb0000000a0056006900650077007300000003b0000000b0000000ad00fffffffb0000000c00430061006d00650072006100000002ff000001610000000000000000fb0000001e004d006f00740069006f006e00200050006c0061006e006e0069006e00670100000374000001890000000000000000fb0000002e004d006f00740069006f006e0050006c0061006e006e0069006e00670020002d00200053006c00690064006500720000000000ffffffff0000000000000000fb0000001c004d006f00740069006f006e0050006c0061006e006e0069006e0067010000015c0000018e0000018300fffffffb00000044004d006f00740069006f006e0050006c0061006e006e0069006e00670020002d0020005400720061006a006500630074006f0072007900200053006c00690064006500720000000000ffffffff0000004a00ffffff00000201000002c200000001000000020000000100000002fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Views:
     collapsed: false
-  Width: 1855
+  Width: 1215
   X: 65
   Y: 24
