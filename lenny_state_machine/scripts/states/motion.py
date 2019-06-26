@@ -2,6 +2,7 @@ import rospy
 import roslib
 import smach
 
+from lenny_msgs.srv import *
 
 ## TODO:change this class, this is only for testing purposes
 
@@ -27,13 +28,29 @@ class MoveHomePickTools(smach.State):
                                 output_keys=['print_output'])
 
   def execute(self, userdata):
-    rospy.loginfo('MOVE HOME PICK TOOLS STATE')
-    rospy.sleep(5)
+    rospy.wait_for_service('/motion_executor/move_to_home');
+    ROS_INFO(' XXXMOVE HOME PICK TOOLS')
+    try:
+          move_to_home = rospy.ServiceProxy('/motion_executor/move_to_home', MoveToHome)
+          req = MoveToHomeRequest()
+          req.pose_name = "HOME_TOOL"
+          req.move_group = "torso"
+        
+          resp = move_to_home(req)
+          if(resp==true):
+              #return 'pick'
+            else:
+              #return 'error'  
+      
+    
+    except rospy.ServiceException as exv:
+           rospy.loginfo('Service did not process request: ', + srt(exec))     
+      
     if self.preempt_requested():
       self.service_preempt()
-      return 'error'
+      #return 'error'
     else:
-      return 'pick'
+      #return 'pick'
 
           
 class MoveHomePickBottles(smach.State):

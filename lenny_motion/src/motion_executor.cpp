@@ -34,6 +34,7 @@ MotionExecutor::MotionExecutor() :
 	execute_calibration_motion_ = node_handle_.advertiseService("execute_calibration_motion", &MotionExecutor::executeCalibrationMotion, this);*/
 	
 	move_to_home_               = node_handle_.advertiseService("move_to_home", &MotionExecutor::moveToHome, this);
+  create_pick_moves_          = node_handle_.advertiseService("create_pick_moves", &MotionExecutor::createPickMoves, this);
 
 	/*move_to_calibrate_shelf_    = node_handle_.advertiseService("move_to_calibrate_shelf", &MotionExecutor::moveToCalibrateShelf, this);
 	move_to_calibrate_tote_     = node_handle_.advertiseService("move_to_calibrate_tote", &MotionExecutor::moveToCalibrateTote, this);
@@ -329,7 +330,7 @@ bool MotionExecutor::moveToHome(lenny_msgs::MoveToHome::Request & req, lenny_msg
 	current_group_->setPlannerId("RRTConnectkConfigDefault");
 
 	current_group_->allowReplanning(true);
-	current_group_->setNumPlanningAttempts(5);
+	current_group_->setNumPlanningAttempts(10);
 	current_group_->setMaxVelocityScalingFactor(trajectory_velocity_scaling_);
 
     current_group_->setStartState(*current_group_->getCurrentState());
@@ -346,36 +347,90 @@ bool MotionExecutor::moveToHome(lenny_msgs::MoveToHome::Request & req, lenny_msg
 	current_group_->setNamedTarget(req.pose_name);
 
 	moveit::planning_interface::MoveGroupInterface::Plan motion_plan;
-	
+  
 	if (current_group_->plan(motion_plan) != 1)
 	{
-		ROS_ERROR_STREAM("No motion plan found.");
-		return false;
+       ROS_ERROR_STREAM("No motion plan found.");
+       res.success = false;
+        return false;
+    
 	}
-
-
 
 
 	bool success = (current_group_->execute(motion_plan)== moveit::planning_interface::MoveItErrorCode::SUCCESS);
 //bool success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
 
-    ROS_INFO_STREAM("Waiting for robot to STOP");
+  ROS_INFO_STREAM("Waiting for robot to STOP");
 	success=motion_utilities_.waitForRobotToStop();
   //ros::Duration(1.5).sleep();
 	if (!success)
 	{
 		ROS_ERROR_STREAM("Failed to execute motion.");
+    res.success = false;
 		return false;
 	}
   else
   {
     	ROS_INFO("Finished execution.");
+      res.success = true;
       return true;
     
   }
 
 	
 }
+
+
+bool MotionExecutor::createPickMoves(lenny_msgs::CreatePickMoves::Request & req, lenny_msgs::CreatePickMoves::Response & res) 
+{
+	ROS_DEBUG_STREAM("Received request to create pick moves " );
+
+  tf::Transform world_to_tcp_tf;
+  tf::Transform world_to_object_tf;
+ 
+	object_pose_=req.object_pose;
+  
+         
+  tf::Vector3 object_position(object_pose_.position.x, object_pose_.position.y, object_pose_.position.z);
+  world_to_tcp_tf.setOrigin(object_position);
+
+ 
+  /* Setting tcp orientation
+	   * Inverting the approach direction so that the tcp points towards the object instead of
+	   * away from it.*/
+  world_to_tcp_tf.setRotation(world_to_object_tf.getRotation());
+
+
+  
+  geometry_msgs::Pose start_pose, target_pose, end_pose;
+  std::vector<geometry_msgs::Pose> poses;
+
+  // creating start pose by applying a translation along +z by approach distance
+  // creating start pose by applying a translation along +X by approach distance (nico)
+  
+  tf::poseTFToMsg(Transform(Quaternion::getIdentity(),Vector3(0,0,0.5))*world_to_tcp_tf,start_pose);
+
+/*
+  // converting target pose
+  tf::poseTFToMsg(world_to_tcp_tf,target_pose);
+
+  // creating end pose by applying a translation along +z by retreat distance
+  tf::poseTFToMsg(Transform(Quaternion::getIdentity(),Vector3(0,0,retreat_dis))*world_to_tcp_tf,end_pose);
+
+  poses.clear();
+  poses.push_back(start_pose);
+  poses.push_back(target_pose);
+  poses.push_back(end_pose);
+  */
+  
+  
+  res.success = true;
+  res.robot_moves = pick_move_poses_;
+  
+  
+}
+
+
 
 /*
 

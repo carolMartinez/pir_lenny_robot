@@ -1,0 +1,33 @@
+<?xml version="1.0" ?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+	<xacro:macro name="cylinder" params="name prefix">
+	<xacro:property name="width" value="1" />
+	<xacro:property name="bodylen" value="3" />
+	<link name="cylinder">
+		<visual>
+		        <geometry>
+		                <cylinder radius="${width}" length="${bodylen}"/>
+		        </geometry>
+		        <material name="blue">
+		                <color rgba="0 0 .8 1"/>
+		        </material>
+		</visual>
+		<collision>
+		        <geometry>
+		                <cylinder radius="${width}" length="${bodylen}"/>
+		        </geometry>
+		</collision>
+	</link>
+		
+		<!-- joint list -->
+		<joint name="${prefix}joint_cylinder" type="fixed">
+			<parent link="base_link"/>
+			<!--<child link="${prefix}link_b1"/>-->
+			<origin xyz="0 0 1" rpy="0 0 0"/>
+			<axis xyz="0 0 1" />
+			<!--<limit lower="-2.9570" upper="2.9570" effort="100" velocity="2.26" />-->
+		</joint>
+		
+		<!-- end of joint list -->
+	</xacro:macro>
+</robot>

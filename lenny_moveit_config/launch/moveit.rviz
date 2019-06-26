@@ -9,6 +9,7 @@ Panels:
         - /MotionPlanning1/Scene Robot1
         - /MotionPlanning1/Planning Request1
         - /MotionPlanning1/Planned Path1
+        - /TF1
         - /TF1/Frames1
       Splitter Ratio: 0.742560029
     Tree Height: 237
@@ -805,7 +806,7 @@ Visualization Manager:
         arm_left_link_tool0:
           Value: false
         arm_left_tcp_link:
-          Value: false
+          Value: true
         arm_right_gripper_support:
           Value: false
         arm_right_link_1_s:
@@ -857,59 +858,59 @@ Visualization Manager:
         feeder_table_2:
           Value: false
         finger_1_link_0:
-          Value: true
+          Value: false
         finger_1_link_1:
-          Value: true
+          Value: false
         finger_1_link_2:
-          Value: true
+          Value: false
         finger_1_link_3:
-          Value: true
+          Value: false
         finger_2_link_0:
-          Value: true
+          Value: false
         finger_2_link_1:
-          Value: true
+          Value: false
         finger_2_link_2:
-          Value: true
+          Value: false
         finger_2_link_3:
-          Value: true
+          Value: false
         finger_middle_link_0:
-          Value: true
+          Value: false
         finger_middle_link_1:
-          Value: true
+          Value: false
         finger_middle_link_2:
-          Value: true
+          Value: false
         finger_middle_link_3:
-          Value: true
+          Value: false
         kinect:
           Value: false
         kinect2:
           Value: false
         palm:
-          Value: true
+          Value: false
         real_sense_base_camera_link:
           Value: false
         robotiq_85_base_link:
-          Value: true
+          Value: false
         robotiq_85_left_finger_link:
-          Value: true
+          Value: false
         robotiq_85_left_finger_tip_link:
-          Value: true
+          Value: false
         robotiq_85_left_inner_knuckle_link:
-          Value: true
+          Value: false
         robotiq_85_left_knuckle_link:
-          Value: true
+          Value: false
         robotiq_85_right_finger_link:
-          Value: true
+          Value: false
         robotiq_85_right_finger_tip_link:
-          Value: true
+          Value: false
         robotiq_85_right_inner_knuckle_link:
-          Value: true
+          Value: false
         robotiq_85_right_knuckle_link:
-          Value: true
+          Value: false
         tool0:
-          Value: true
+          Value: false
         tool_table:
-          Value: true
+          Value: false
         torso_base_link:
           Value: false
         torso_link_b1:
@@ -919,15 +920,15 @@ Visualization Manager:
         worktable:
           Value: false
         zed_camera_center:
-          Value: true
+          Value: false
         zed_left_camera_frame:
-          Value: true
+          Value: false
         zed_left_camera_optical_frame:
-          Value: true
+          Value: false
         zed_right_camera_frame:
-          Value: true
+          Value: false
         zed_right_camera_optical_frame:
-          Value: true
+          Value: false
       Marker Scale: 1
       Name: TF
       Show Arrows: true

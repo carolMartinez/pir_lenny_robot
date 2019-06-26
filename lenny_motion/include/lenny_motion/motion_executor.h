@@ -21,6 +21,8 @@
 #include <apc16delft_msgs/ExecuteStitchedMotion.h>
 #include <apc16delft_msgs/ExecuteCalibrationMotion.h>*/
 #include <lenny_msgs/MoveToHome.h>
+#include <lenny_msgs/CreatePickMoves.h>
+
 /*
 #include <apc16delft_msgs/MoveToCalibrateShelf.h>
 #include <apc16delft_msgs/MoveToCalibrateTote.h>
@@ -58,6 +60,8 @@ private:
 	ros::ServiceServer execute_stitched_motion_;
 	ros::ServiceServer execute_calibration_motion_;*/
 	ros::ServiceServer move_to_home_;
+  ros::ServiceServer create_pick_moves_;
+  
 	/*
 	ros::ServiceServer move_to_calibrate_shelf_;
 	ros::ServiceServer move_to_calibrate_tote_;
@@ -76,6 +80,10 @@ private:
 	robot_state::RobotStatePtr rs_;
   
   MotionUtilities motion_utilities_;
+  
+  geometry_msgs::Pose object_pose_;
+  std::vector<geometry_msgs::Pose> pick_move_poses_;
+  
 
 protected:
 	/*bool executeCoarseMotion(apc16delft_msgs::ExecuteCoarseMotion::Request & req, apc16delft_msgs::ExecuteCoarseMotion::Response & res);
@@ -84,6 +92,7 @@ protected:
 	bool executeFineMotion(apc16delft_msgs::ExecuteFineMotion::Request & req, apc16delft_msgs::ExecuteFineMotion::Response & res);
 	bool executeCalibrationMotion(apc16delft_msgs::ExecuteCalibrationMotion::Request & req, apc16delft_msgs::ExecuteCalibrationMotion::Response & res);*/
 	bool moveToHome(lenny_msgs::MoveToHome::Request & req, lenny_msgs::MoveToHome::Response & res);
+	bool createPickMoves(lenny_msgs::CreatePickMoves::Request & req, lenny_msgs::CreatePickMoves::Response & res);
 	
 	/*
 	bool moveToCalibrateShelf(apc16delft_msgs::MoveToCalibrateShelf::Request &, apc16delft_msgs::MoveToCalibrateShelf::Response & res);

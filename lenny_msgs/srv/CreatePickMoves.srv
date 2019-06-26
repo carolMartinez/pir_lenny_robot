@@ -1,0 +1,6 @@
+#Create robot moves based on object's position
+geometry_msgs/Pose object_pose
+
+---
+bool success
+geometry_msgs/Pose[] robot_moves

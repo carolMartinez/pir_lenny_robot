@@ -15,8 +15,8 @@ def makeInitMasterSM():
 	sm = smach.StateMachine(outcomes=['succeeded','aborted'])
 
 	req = MoveToHomeRequest()
-	req.pose_name = "PICK_WAIT"
-	req.move_group = "arm_right"
+	req.pose_name = "HOME"
+	req.move_group = "sda10f"
 
 	with sm:
 		# Configure camera node.

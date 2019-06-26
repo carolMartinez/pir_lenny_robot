@@ -1,0 +1,35 @@
+<?xml version="1.0" ?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+	<xacro:macro name="table" params="name prefix">
+		<!-- link list -->
+		<link name="table">
+			<visual>
+				<geometry>
+					<mesh filename="package://put_objects_rviz/stl/BandaAnclada.stl" />
+				</geometry>
+				<material name="gray">
+					<color rgba="0.5 0.5 0.5 1"/>
+				</material>
+			</visual>
+			<collision>
+				<geometry>
+					<mesh filename="package://put_objects_rviz/stl/BandaAnclada.stl" />
+				</geometry>
+				<material name="yellow">
+					<color rgba="0 1 1 1"/>
+				</material>
+			</collision>
+		</link>
+		
+		<!-- joint list -->
+		<joint name="${prefix}joint_1" type="fixed">
+			<parent link="base_link"/>
+			<!--<child link="${prefix}link_table"/>-->
+			<origin xyz="0.09257 0 0.8835" rpy="0 0 0"/>
+			<axis xyz="0 0 1" />
+			<!--<limit lower="-2.9570" upper="2.9570" effort="100" velocity="2.26" />-->
+		</joint>
+		
+		<!-- end of joint list -->
+	</xacro:macro>
+</robot>

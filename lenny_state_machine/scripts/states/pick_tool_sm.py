@@ -13,8 +13,15 @@ def makePickToolSM():
 	with sm:
 		
 		# Move robot to home position.
+#		smach.StateMachine.add(
+#				'DETECT TOOL', DetectTool(),
+#				transitions = {
+#				'success':'PLAN_COARSE',
+#				'error':'error'}
+#		)
+          
 		smach.StateMachine.add(
-				'PLAN_COARSE',PlanCoarseMotion(),
+				'CREATE_PICK_MOVES',CreatePickMoves(),
 				transitions = {
 					'success':'MOVE_COARSE',
 					'error':'error'}

@@ -1,0 +1,4 @@
+
+<launch>
+	<param name="table_description" command="$(find xacro)/xacro.py '$(find put_objects_rviz)/urdf/scene.xacro'" />
+</launch>

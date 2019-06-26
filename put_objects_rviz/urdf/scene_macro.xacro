@@ -1,0 +1,7 @@
+<?xml version="1.0" ?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro"
+    name="scene">	
+        <xacro:include filename="$(find put_objects_rviz)/urdf/cylinder.xacro" />
+        <xacro:include filename="$(find put_objects_rviz)/urdf/table.xacro" />
+        
+</robot>
