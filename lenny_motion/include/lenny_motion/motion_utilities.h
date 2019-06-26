@@ -35,8 +35,11 @@ class MotionUtilities
                   return false;
               }
               
-              if( (*all_states).position.size() == 8)
+              if( (*all_states).position.size() == 35)
               {
+				  ///TODO: check this and its advantages
+				  // Using simulated robot. ??? reallly?
+				 ROS_INFO("Using simulated robot "); 
                  return true;     
               }
               else
@@ -45,7 +48,10 @@ class MotionUtilities
                   while(true)
                   {
                       //rail_state_ = ros::topic::waitForMessage<sensor_msgs::JointState>("/sia20f/sia20f_b1_controller/joint_states", ros::Duration(topic_time_out_));
-                      sda10f_state = ros::topic::waitForMessage<sensor_msgs::JointState>("/sda10f/sda10f_r2_controller/joint_states", ros::Duration(topic_time_out));
+
+						///TODO: check if by only listening /joint_states topic is enough
+                      //sda10f_state = ros::topic::waitForMessage<sensor_msgs::JointState>("/sda10f/sda10f_r2_controller/joint_states", ros::Duration(topic_time_out));
+						sda10f_state = ros::topic::waitForMessage<sensor_msgs::JointState>("/joint_states", ros::Duration(topic_time_out));
                     
                       if (!sda10f_state) 
                       {
@@ -64,7 +70,10 @@ class MotionUtilities
                   while(!robot_has_stopped) 
                   {
                     current_positions = sda10f_state->position;
-                    sda10f_state = ros::topic::waitForMessage<sensor_msgs::JointState>("/sda10f/sda10f_r2_controller/joint_states", ros::Duration(topic_time_out));
+
+                    //sda10f_state = ros::topic::waitForMessage<sensor_msgs::JointState>("/sda10f/sda10f_r2_controller/joint_states", ros::Duration(topic_time_out));
+                    sda10f_state = ros::topic::waitForMessage<sensor_msgs::JointState>("/joint_states", ros::Duration(topic_time_out));
+                    
                     if (!sda10f_state) 
                     {
                       ROS_ERROR_STREAM("Robot states have not been published");
@@ -88,50 +97,6 @@ class MotionUtilities
                 
            } 
            
-           bool waitForRobotToStopStatus()
-           {
-              trajectory_result_ =  ros::topic::waitForMessage<moveit_msgs::ExecuteTrajectoryActionResult>("/execute_trajectory/result", ros::Duration(topic_time_out));
-              
-              if (!trajectory_result_)
-              {
-                  ROS_ERROR_STREAM("Execute trayectory status has not been published");
-                  return false;
-              }
-              
-              if( (*trajectory_result_).result.error_code.val == 1)
-              {
-                 return true;     
-              }
-              else
-              {
-                  
-                  //TODO: this has to be done on a while checking status until it finds the result...
-                  bool robot_has_stopped = false;
-      
-                  trajectory_result_ =  ros::topic::waitForMessage<moveit_msgs::ExecuteTrajectoryActionResult>("/execute_trajectory/result", ros::Duration(topic_time_out));
-             
-                  if (!trajectory_result_) 
-                  {
-                    ROS_ERROR_STREAM("Execute trayectory status has not been published");
-                    return false;
-                  }
-                      
-                  int i=0;
-                  while(!robot_has_stopped) 
-                  {
-                    current_result_val = (*trajectory_result_).result.error_code.val;
-                    
-                    if (current_result_val == 1)
-                    {
-                      ROS_INFO("Robot stopped" );
-                      break;
-                    }
-                  }
-                  return (robot_has_stopped);
-                  
-              }
-                
-           } 
            
            
           double getDistance (std::vector<double> const & joints_p1, std::vector<double> const & joints_p2) 

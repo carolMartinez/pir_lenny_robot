@@ -332,6 +332,8 @@ bool MotionExecutor::moveToHome(lenny_msgs::MoveToHome::Request & req, lenny_msg
 	current_group_->setNumPlanningAttempts(5);
 	current_group_->setMaxVelocityScalingFactor(trajectory_velocity_scaling_);
 
+    current_group_->setStartState(*current_group_->getCurrentState());
+
 	//geometry_msgs::PoseStamped gripper_current_pose = current_group_->getCurrentPose("gripper_tool0");
 
 	/*if(gripper_current_pose.pose.position.y > 0.44) {
@@ -352,17 +354,14 @@ bool MotionExecutor::moveToHome(lenny_msgs::MoveToHome::Request & req, lenny_msg
 	}
 
 
+
+
 	bool success = (current_group_->execute(motion_plan)== moveit::planning_interface::MoveItErrorCode::SUCCESS);
 //bool success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
 
-  ROS_INFO_STREAM("UPDATING ROBOT STATE ");
-		
-//TODO: test this new function.
-  //motion_utilities_.waitForRobotToStop();
+    ROS_INFO_STREAM("Waiting for robot to STOP");
+	success=motion_utilities_.waitForRobotToStop();
   //ros::Duration(1.5).sleep();
-  
-  success=motion_utilities_.waitForRobotToStopStatus();
-  ros::Duration(1.5).sleep();
 	if (!success)
 	{
 		ROS_ERROR_STREAM("Failed to execute motion.");

@@ -60,6 +60,8 @@ def makeInitMasterSM():
 		#
     
 		# Move robot to home position
+
+		## Make sure all the robot is in home positon..
 		smach.StateMachine.add('MOVE_HOME',ServiceState('/motion_executor/move_to_home',MoveToHome,request=req),transitions = {
 					'succeeded':'succeeded',
 					'aborted':'aborted',
