@@ -885,6 +885,8 @@ Visualization Manager:
           Value: false
         kinect2:
           Value: false
+        object_link:
+          Value: true
         palm:
           Value: false
         real_sense_base_camera_link:
@@ -908,7 +910,7 @@ Visualization Manager:
         robotiq_85_right_knuckle_link:
           Value: false
         tool0:
-          Value: false
+          Value: true
         tool_table:
           Value: false
         torso_base_link:
@@ -962,6 +964,8 @@ Visualization Manager:
           feeder_table:
             feeder_table_2:
               {}
+          object_link:
+            {}
           torso_link_b1:
             arm_left_link_1_s:
               arm_left_link_2_l:

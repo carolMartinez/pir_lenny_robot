@@ -61,8 +61,7 @@ find_package(catkin REQUIRED COMPONENTS
    MoveToHome.srv
    CreatePickMovements.srv
    ExecuteCoarseMotion.srv
-
-#   Service2.srv
+   ExecuteCoarseMove.srv
  )
 
 ## Generate actions in the 'action' folder

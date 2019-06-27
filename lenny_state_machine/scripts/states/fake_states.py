@@ -4,6 +4,8 @@ import smach
 import moveit_commander
 
 from lenny_msgs.srv import *
+from lenny_msgs.srv import ExecuteCoarseMotion
+
 from tf import TransformListener
 
 ## TODO:change this class, this is only for testing purposes
@@ -30,7 +32,7 @@ class MoveHomePickTools(smach.State):
                                 output_keys=['print_output'])
 
   def execute(self, userdata):
-    rospy.wait_for_service('/motion_executor/move_to_home');
+    rospy.wait_for_service('/motion_executor/move_to_home')
     
     try:
           #Moving ARMS to a HOME position to pick up the tool
@@ -40,7 +42,7 @@ class MoveHomePickTools(smach.State):
           #Moving TORSO to HOME
           #Using movegroup python interface to move only the toros.
           #this because the go to pose goal did not work in c++
-          move_group = moveit_commander.MoveGroupCommander('sda10f');
+          move_group = moveit_commander.MoveGroupCommander('sda10f')
           joint_goal = move_group.get_current_joint_values()
           joint_goal[0] = 1.9188
           plan=move_group.go(joint_goal,wait=True)
@@ -143,12 +145,12 @@ class DetectTool(smach.State):
 class CreatePickMoves(smach.State):
   def __init__(self):
     smach.State.__init__(self, outcomes=['success','error'],
-    output_keys=['robot_movements'])
+    output_keys=['robot_movements_output'])
     self.tf = TransformListener()
 
   def execute(self, userdata):
     
-    rospy.wait_for_service('/motion_executor/create_pick_movements');
+    rospy.wait_for_service('/motion_executor/create_pick_movements')
     
     
     create_pick_movements = rospy.ServiceProxy('/motion_executor/create_pick_movements', CreatePickMovements)
@@ -165,7 +167,7 @@ class CreatePickMoves(smach.State):
             
             
             resp = create_pick_movements(pose)
-            userdata.robot_movements = resp.robot_movements;
+            userdata.robot_movements_output = 1
             
             rospy.loginfo('CREATE PICK MOVES')
             
@@ -198,18 +200,36 @@ class PlanCoarseMotion(smach.State):
       return 'success'
 
 
-class MoveCoarseMotion(smach.State):
+class ExecuteCoarseMotion(smach.State):
   def __init__(self):
-    smach.State.__init__(self, outcomes=['success','error'], input_keys=['robot_movements'])
+    smach.State.__init__(self, outcomes=['success','error'], input_keys=['robot_movements_input'])
 
   def execute(self, userdata):
-    rospy.loginfo('MOVE COARSE MOTION')
-    rospy.sleep(5)
+    
+    
+    rospy.wait_for_service('/motion_executor/execute_coarse_move')
+    
+    execute_coarse_move=rospy.ServiceProxy('/motion_executor/execute_coarse_move',ExecuteCoarseMove)
+     
+    target_pose = userdata.robot_movements_input      
+    #resp = execute_coarse_move(target_pose,"sda10f")
+    
+    
+    rospy.loginfo('CREATE PICK MOVES')
+    
+    #if(resp.success):
+      
+    return 'success'
+    #else:
+    #  return 'error' 
+            
+                
     if self.preempt_requested():
       self.service_preempt()
       return 'error'
     else:
       return 'success'
+
 
 
 class PlanFineMotion(smach.State):

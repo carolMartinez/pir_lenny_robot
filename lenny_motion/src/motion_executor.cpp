@@ -37,7 +37,11 @@ MotionExecutor::MotionExecutor() :
 
   create_pick_movements_          = node_handle_.advertiseService("create_pick_movements", &MotionExecutor::createPickMovements, this);
   
-execute_coarse_motion_          = node_handle_.advertiseService("execute_coarse_motion", &MotionExecutor::executeCoarseMotion, this);
+  execute_coarse_motion_          = node_handle_.advertiseService("execute_coarse_motion", &MotionExecutor::executeCoarseMotion, this);
+
+  execute_coarse_move_          = node_handle_.advertiseService("execute_coarse_move", &MotionExecutor::executeCoarseMove, this);
+
+
   
 	/*move_to_calibrate_shelf_    = node_handle_.advertiseService("move_to_calibrate_shelf", &MotionExecutor::moveToCalibrateShelf, this);
 	move_to_calibrate_tote_     = node_handle_.advertiseService("move_to_calibrate_tote", &MotionExecutor::moveToCalibrateTote, this);
@@ -452,50 +456,166 @@ bool MotionExecutor::executeCoarseMotion(lenny_msgs::ExecuteCoarseMotion::Reques
     current_group_->setStartState(*current_group_->getCurrentState());
 
 // constructing motion plan goal constraints
-   std::vector<double> position_tolerances(3,POSITION_TOLERANCE);
-   std::vector<double> orientation_tolerances(3,ORIENTATION_TOLERANCE);
+   std::vector<double> position_tolerances(3,0.01);
+   std::vector<double> orientation_tolerances(3,0.01);
    geometry_msgs::PoseStamped p;
-   p.header.frame_id = WORLD_FRAME_ID;
-   p.pose = pose_target;
-   moveit_msgs::Constraints pose_goal = kinematic_constraints::constructGoalConstraints(WRIST_LINK_NAME,p,position_tolerances,
-				   orientation_tolerances);
+   p.header.frame_id = "torso_base_link";
+   p.pose = target_pose;
+   moveit_msgs::Constraints pose_goal = kinematic_constraints::constructGoalConstraints("arm_left_link_7_t",p,0.01,
+				   0.01);
 
 
 
    // creating motion plan request
    moveit_msgs::GetMotionPlan motion_plan;
-   moveit_msgs::MotionPlanRequest &req = motion_plan.request.motion_plan_request;
-   moveit_msgs::MotionPlanResponse &res = motion_plan.response.motion_plan_response;
-   req.start_state = start_robot_state;
-   req.start_state.is_diff = true;
-   req.planner_id = PLANNER_ID;
-   req.group_name = ARM_GROUP_NAME;
-   req.goal_constraints.push_back(pose_goal);
-   req.allowed_planning_time = PLANNING_TIME;
-   req.num_planning_attempts = PLANNING_ATTEMPS;
-   req.max_velocity_scaling_factor = MAX_VELOCITY_SCALING_FACTOR;
+   moveit_msgs::MotionPlanRequest &plan_req = motion_plan.request.motion_plan_request;
+   moveit_msgs::MotionPlanResponse &plan_res = motion_plan.response.motion_plan_response;
    
+   plan_req.planner_id = "RRTConnectk";
+   plan_req.group_name = req.move_group;
+   plan_req.goal_constraints.push_back(pose_goal);
+   plan_req.allowed_planning_time = 60;
+   plan_req.num_planning_attempts = 10;
+   plan_req.max_velocity_scaling_factor = 0.5;
+
+    //Updating current robot state
+    moveit_msgs::RobotState robot_state;
+    robot_state::RobotStatePtr current_state(current_group_->getCurrentState());
+    const robot_state::JointModelGroup *joint_model_group = current_state->getJointModelGroup(current_group_->getName());
+    current_group_->setStartState(*current_state);
+
+    robot_state::robotStateToRobotStateMsg(*current_state,plan_req.start_state);
+
+
+moveit::planning_interface::MoveGroupInterface::Plan plan;
  // request motion plan
        bool success = false;
        //moveit::planning_interface::MoveItErrorCode success;
-       if(motion_plan_client.call(motion_plan) && res.error_code.val == res.error_code.SUCCESS)
+       if(motion_plan_client.call(motion_plan) && plan_res.error_code.val == plan_res.error_code.SUCCESS)
        {
                // saving motion plan results
-               plan.start_state_ = res.trajectory_start;
-               plan.trajectory_ = res.trajectory;
+               plan.start_state_ = plan_res.trajectory_start;
+               plan.trajectory_ = plan_res.trajectory;
                success = true;
                
        }
        
-		move_group_ptr->execute(plan);
+       if (success)
+       {
+          current_group_->execute(plan);
+          success = motion_utilities_.waitForRobotToStop();
+          
+          if (success)
+          {
+             current_group_->execute(plan);
+              res.success = true;
+              return true;
+          }
+          else 
+          {
+            res.success = false;
+            return false;
+          }
+        }
+        else
+          return false;
 
 
 
-	return true;
+	
 
 }
 
 
+bool MotionExecutor::executeCoarseMove(lenny_msgs::ExecuteCoarseMove::Request & req, lenny_msgs::ExecuteCoarseMove::Response & res) 
+{
+	ROS_DEBUG_STREAM("Received request to execute coarse motion " );
+	geometry_msgs::Pose target_pose;
+	target_pose=req.target_pose;
+
+    moveit::planning_interface::MoveGroupInterface group(req.move_group);
+	current_group_ = &group;
+	current_group_->setGoalTolerance(0.001);
+	current_group_->setPlannerId("RRTConnectk");
+	current_group_->allowReplanning(true);
+	current_group_->setNumPlanningAttempts(10);
+	current_group_->setMaxVelocityScalingFactor(trajectory_velocity_scaling_);
+
+    current_group_->setStartState(*current_group_->getCurrentState());
+
+// constructing motion plan goal constraints
+   std::vector<double> position_tolerances(3,0.01);
+   std::vector<double> orientation_tolerances(3,0.01);
+   geometry_msgs::PoseStamped p;
+   p.header.frame_id = "torso_base_link";
+   p.pose = target_pose;
+   moveit_msgs::Constraints pose_goal = kinematic_constraints::constructGoalConstraints("arm_left_link_7_t",p,0.01,
+				   0.01);
+
+
+
+   // creating motion plan request
+   moveit_msgs::GetMotionPlan motion_plan;
+   moveit_msgs::MotionPlanRequest &plan_req = motion_plan.request.motion_plan_request;
+   moveit_msgs::MotionPlanResponse &plan_res = motion_plan.response.motion_plan_response;
+   
+   plan_req.planner_id = "RRTConnectk";
+   plan_req.group_name = req.move_group;
+   plan_req.goal_constraints.push_back(pose_goal);
+   plan_req.allowed_planning_time = 60;
+   plan_req.num_planning_attempts = 10;
+   plan_req.max_velocity_scaling_factor = 0.5;
+
+    //Updating current robot state
+    moveit_msgs::RobotState robot_state;
+    robot_state::RobotStatePtr current_state(current_group_->getCurrentState());
+    const robot_state::JointModelGroup *joint_model_group = current_state->getJointModelGroup(current_group_->getName());
+    current_group_->setStartState(*current_state);
+
+    robot_state::robotStateToRobotStateMsg(*current_state,plan_req.start_state);
+
+
+moveit::planning_interface::MoveGroupInterface::Plan plan;
+ // request motion plan
+       bool success = false;
+       //moveit::planning_interface::MoveItErrorCode success;
+       if(motion_plan_client.call(motion_plan) && plan_res.error_code.val == plan_res.error_code.SUCCESS)
+       {
+               // saving motion plan results
+               plan.start_state_ = plan_res.trajectory_start;
+               plan.trajectory_ = plan_res.trajectory;
+               success = true;
+               
+       }
+       
+       if (success)
+       {
+          current_group_->execute(plan);
+          success = motion_utilities_.waitForRobotToStop();
+          
+          if (success)
+          {
+             current_group_->execute(plan);
+              res.success = true;
+              return true;
+          }
+          else 
+          {
+            res.success = false;
+            return false;
+          }
+        }
+        else
+        {
+          res.success = false;
+          
+          return false;
+        }
+
+
+	
+
+}
 /*
 
 bool MotionExecutor::moveToCalibrateShelf(apc16delft_msgs::MoveToCalibrateShelf::Request &, apc16delft_msgs::MoveToCalibrateShelf::Response & res) {

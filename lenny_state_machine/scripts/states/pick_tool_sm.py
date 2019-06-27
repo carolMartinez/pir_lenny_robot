@@ -8,7 +8,7 @@ from states.fake_states import *
         
         
 def makePickToolSM():
-	sm = smach.StateMachine(outcomes=['success','error'])
+	sm = smach.StateMachine(outcomes=['success','error'], input_keys=['sm_robot_movements_input'],output_keys=['sm_robot_movements_output'])
 	
 	with sm:
 		
@@ -25,14 +25,18 @@ def makePickToolSM():
 				transitions = {
 					'success':'MOVE_COARSE',
 					'error':'error'},
-				remapping = { 'robot_movements'='robot_movements'}	
+          remapping = {'robot_movements_output' : 'sm_robot_movements_output'}
 		)
 		
+    https://stackoverflow.com/questions/48121371/how-to-correctly-pass-mutable-objects-using-ros-smach-fsm
+    
 		smach.StateMachine.add(
 				'MOVE_COARSE',ExecuteCoarseMotion(),
 				transitions = {
 					'success':'PLAN_FINE',
-					'error':'error'}
+					'error':'error'},
+          remapping = {'robot_movements_input': 'sm_robot_movements_output'}	
+          
 		)
 				
 		smach.StateMachine.add(
