@@ -8,7 +8,7 @@
 #include <moveit/move_group_interface/move_group_interface.h>
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
 
-
+#include <tf/transform_listener.h>
 
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Pose.h>
@@ -21,7 +21,9 @@
 #include <apc16delft_msgs/ExecuteStitchedMotion.h>
 #include <apc16delft_msgs/ExecuteCalibrationMotion.h>*/
 #include <lenny_msgs/MoveToHome.h>
-#include <lenny_msgs/CreatePickMoves.h>
+#include <lenny_msgs/CreatePickMovements.h>
+#include <lenny_msgs/ExecuteCoarseMotion.h>
+
 
 /*
 #include <apc16delft_msgs/MoveToCalibrateShelf.h>
@@ -34,6 +36,7 @@
 
 #include "motion_utilities.h"
 
+using namespace tf;
 
 namespace pirLenny {
 
@@ -60,7 +63,8 @@ private:
 	ros::ServiceServer execute_stitched_motion_;
 	ros::ServiceServer execute_calibration_motion_;*/
 	ros::ServiceServer move_to_home_;
-  ros::ServiceServer create_pick_moves_;
+	ros::ServiceServer create_pick_movements_;
+	ros::ServiceServer execute_coarse_motion_;
   
 	/*
 	ros::ServiceServer move_to_calibrate_shelf_;
@@ -82,7 +86,7 @@ private:
   MotionUtilities motion_utilities_;
   
   geometry_msgs::Pose object_pose_;
-  std::vector<geometry_msgs::Pose> pick_move_poses_;
+ // std::vector<geometry_msgs::Pose> pick_move_poses_;
   
 
 protected:
@@ -92,7 +96,10 @@ protected:
 	bool executeFineMotion(apc16delft_msgs::ExecuteFineMotion::Request & req, apc16delft_msgs::ExecuteFineMotion::Response & res);
 	bool executeCalibrationMotion(apc16delft_msgs::ExecuteCalibrationMotion::Request & req, apc16delft_msgs::ExecuteCalibrationMotion::Response & res);*/
 	bool moveToHome(lenny_msgs::MoveToHome::Request & req, lenny_msgs::MoveToHome::Response & res);
-	bool createPickMoves(lenny_msgs::CreatePickMoves::Request & req, lenny_msgs::CreatePickMoves::Response & res);
+	
+	bool createPickMovements(lenny_msgs::CreatePickMovements::Request & req, lenny_msgs::CreatePickMovements::Response & res);
+
+	bool executeCoarseMotion(lenny_msgs::ExecuteCoarseMotion::Request & req, lenny_msgs::ExecuteCoarseMotion::Response & res);
 	
 	/*
 	bool moveToCalibrateShelf(apc16delft_msgs::MoveToCalibrateShelf::Request &, apc16delft_msgs::MoveToCalibrateShelf::Response & res);

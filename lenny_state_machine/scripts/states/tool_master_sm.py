@@ -25,13 +25,13 @@ def makeToolMasterSM():
 		
 		
 		# Move robot to home position.
-		smach.StateMachine.add(
-				'MOVE_HOME_PICK_TOOLS',MoveHomePickTools(),
-				transitions = {
-					'pick':'PICK_TOOL_SM',
-					'place':'PICK_TOOL_SM',
-					'error':'error'}
-		)
+#		smach.StateMachine.add(
+#				'MOVE_HOME_PICK_TOOLS',MoveHomePickTools(),
+#				transitions = {
+#					'pick':'PICK_TOOL_SM',
+#					'place':'PICK_TOOL_SM',
+#					'error':'error'}
+#		)
 		
 		smach.StateMachine.add(
 				'PICK_TOOL_SM',makePickToolSM(),

@@ -24,11 +24,12 @@ def makePickToolSM():
 				'CREATE_PICK_MOVES',CreatePickMoves(),
 				transitions = {
 					'success':'MOVE_COARSE',
-					'error':'error'}
+					'error':'error'},
+				remapping = { 'robot_movements'='robot_movements'}	
 		)
 		
 		smach.StateMachine.add(
-				'MOVE_COARSE',MoveCoarseMotion(),
+				'MOVE_COARSE',ExecuteCoarseMotion(),
 				transitions = {
 					'success':'PLAN_FINE',
 					'error':'error'}

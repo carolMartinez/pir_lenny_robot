@@ -142,16 +142,17 @@ class DetectTool(smach.State):
 
 class CreatePickMoves(smach.State):
   def __init__(self):
-    smach.State.__init__(self, outcomes=['success','error'])
+    smach.State.__init__(self, outcomes=['success','error'],
+    output_keys=['robot_movements'])
     self.tf = TransformListener()
 
   def execute(self, userdata):
     
-    rospy.wait_for_service('/motion_executor/crete_pick_moves');
+    rospy.wait_for_service('/motion_executor/create_pick_movements');
     
     
-    create_pick_moves = rospy.ServiceProxy('/motion_executor/create_pick_moves', CreatePickMoves)
-    
+    create_pick_movements = rospy.ServiceProxy('/motion_executor/create_pick_movements', CreatePickMovements)
+            
     #Listen transformation
     if self.tf.frameExists("/torso_base_link") and self.tf.frameExists("/object_link"):
             t = self.tf.getLatestCommonTime("/torso_base_link", "/object_link")
@@ -163,12 +164,13 @@ class CreatePickMoves(smach.State):
             
             
             
-            resp = create_pick_moves(pose)
-          
+            resp = create_pick_movements(pose)
+            userdata.robot_movements = resp.robot_movements;
+            
             rospy.loginfo('CREATE PICK MOVES')
             
-            if(resp):
-              return 'pick'
+            if(resp.success):
+              return 'success'
             else:
               return 'error' 
             
@@ -198,7 +200,7 @@ class PlanCoarseMotion(smach.State):
 
 class MoveCoarseMotion(smach.State):
   def __init__(self):
-    smach.State.__init__(self, outcomes=['success','error'])
+    smach.State.__init__(self, outcomes=['success','error'], input_keys=['robot_movements'])
 
   def execute(self, userdata):
     rospy.loginfo('MOVE COARSE MOTION')

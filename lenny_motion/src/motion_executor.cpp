@@ -34,8 +34,11 @@ MotionExecutor::MotionExecutor() :
 	execute_calibration_motion_ = node_handle_.advertiseService("execute_calibration_motion", &MotionExecutor::executeCalibrationMotion, this);*/
 	
 	move_to_home_               = node_handle_.advertiseService("move_to_home", &MotionExecutor::moveToHome, this);
-  create_pick_moves_          = node_handle_.advertiseService("create_pick_moves", &MotionExecutor::createPickMoves, this);
 
+  create_pick_movements_          = node_handle_.advertiseService("create_pick_movements", &MotionExecutor::createPickMovements, this);
+  
+execute_coarse_motion_          = node_handle_.advertiseService("execute_coarse_motion", &MotionExecutor::executeCoarseMotion, this);
+  
 	/*move_to_calibrate_shelf_    = node_handle_.advertiseService("move_to_calibrate_shelf", &MotionExecutor::moveToCalibrateShelf, this);
 	move_to_calibrate_tote_     = node_handle_.advertiseService("move_to_calibrate_tote", &MotionExecutor::moveToCalibrateTote, this);
 	grasp_pose_visualizer_      = node_handle_.advertise<geometry_msgs::PoseStamped>("the_chosen_one", 10, true);
@@ -381,7 +384,7 @@ bool MotionExecutor::moveToHome(lenny_msgs::MoveToHome::Request & req, lenny_msg
 }
 
 
-bool MotionExecutor::createPickMoves(lenny_msgs::CreatePickMoves::Request & req, lenny_msgs::CreatePickMoves::Response & res) 
+bool MotionExecutor::createPickMovements(lenny_msgs::CreatePickMovements::Request & req, lenny_msgs::CreatePickMovements::Response & res) 
 {
 	ROS_DEBUG_STREAM("Received request to create pick moves " );
 
@@ -392,6 +395,7 @@ bool MotionExecutor::createPickMoves(lenny_msgs::CreatePickMoves::Request & req,
   
          
   tf::Vector3 object_position(object_pose_.position.x, object_pose_.position.y, object_pose_.position.z);
+
   world_to_tcp_tf.setOrigin(object_position);
 
  
@@ -408,28 +412,88 @@ bool MotionExecutor::createPickMoves(lenny_msgs::CreatePickMoves::Request & req,
   // creating start pose by applying a translation along +z by approach distance
   // creating start pose by applying a translation along +X by approach distance (nico)
   
-  tf::poseTFToMsg(Transform(Quaternion::getIdentity(),Vector3(0,0,0.5))*world_to_tcp_tf,start_pose);
+  tf::poseTFToMsg(Transform(Quaternion::getIdentity(),Vector3(0,0,0.2))*world_to_tcp_tf,start_pose);
 
-/*
+
   // converting target pose
   tf::poseTFToMsg(world_to_tcp_tf,target_pose);
 
   // creating end pose by applying a translation along +z by retreat distance
-  tf::poseTFToMsg(Transform(Quaternion::getIdentity(),Vector3(0,0,retreat_dis))*world_to_tcp_tf,end_pose);
+  tf::poseTFToMsg(Transform(Quaternion::getIdentity(),Vector3(0,0,0.3))*world_to_tcp_tf,end_pose);
 
   poses.clear();
   poses.push_back(start_pose);
   poses.push_back(target_pose);
   poses.push_back(end_pose);
-  */
+  
   
   
   res.success = true;
-  res.robot_moves = pick_move_poses_;
+  res.robot_movements = poses;
   
-  
+  return true;
 }
 
+
+bool MotionExecutor::executeCoarseMotion(lenny_msgs::ExecuteCoarseMotion::Request & req, lenny_msgs::ExecuteCoarseMotion::Response & res) 
+{
+	ROS_DEBUG_STREAM("Received request to execute coarse motion " );
+	geometry_msgs::Pose target_pose;
+	target_pose=req.target_pose;
+
+    moveit::planning_interface::MoveGroupInterface group(req.move_group);
+	current_group_ = &group;
+	current_group_->setGoalTolerance(0.001);
+	current_group_->setPlannerId("RRTConnectk");
+	current_group_->allowReplanning(true);
+	current_group_->setNumPlanningAttempts(10);
+	current_group_->setMaxVelocityScalingFactor(trajectory_velocity_scaling_);
+
+    current_group_->setStartState(*current_group_->getCurrentState());
+
+// constructing motion plan goal constraints
+   std::vector<double> position_tolerances(3,POSITION_TOLERANCE);
+   std::vector<double> orientation_tolerances(3,ORIENTATION_TOLERANCE);
+   geometry_msgs::PoseStamped p;
+   p.header.frame_id = WORLD_FRAME_ID;
+   p.pose = pose_target;
+   moveit_msgs::Constraints pose_goal = kinematic_constraints::constructGoalConstraints(WRIST_LINK_NAME,p,position_tolerances,
+				   orientation_tolerances);
+
+
+
+   // creating motion plan request
+   moveit_msgs::GetMotionPlan motion_plan;
+   moveit_msgs::MotionPlanRequest &req = motion_plan.request.motion_plan_request;
+   moveit_msgs::MotionPlanResponse &res = motion_plan.response.motion_plan_response;
+   req.start_state = start_robot_state;
+   req.start_state.is_diff = true;
+   req.planner_id = PLANNER_ID;
+   req.group_name = ARM_GROUP_NAME;
+   req.goal_constraints.push_back(pose_goal);
+   req.allowed_planning_time = PLANNING_TIME;
+   req.num_planning_attempts = PLANNING_ATTEMPS;
+   req.max_velocity_scaling_factor = MAX_VELOCITY_SCALING_FACTOR;
+   
+ // request motion plan
+       bool success = false;
+       //moveit::planning_interface::MoveItErrorCode success;
+       if(motion_plan_client.call(motion_plan) && res.error_code.val == res.error_code.SUCCESS)
+       {
+               // saving motion plan results
+               plan.start_state_ = res.trajectory_start;
+               plan.trajectory_ = res.trajectory;
+               success = true;
+               
+       }
+       
+		move_group_ptr->execute(plan);
+
+
+
+	return true;
+
+}
 
 
 /*
