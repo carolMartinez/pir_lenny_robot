@@ -5,7 +5,7 @@ import moveit_commander
 import tf2_ros
 
 from lenny_msgs.srv import *
-from lenny_msgs.srv import ExecuteCoarseMotion
+
 
 
 #from tf import TransformListener
@@ -218,22 +218,24 @@ class ExecuteCoarseMotion(smach.State):
     
     execute_coarse_move=rospy.ServiceProxy('/motion_executor/execute_coarse_move',ExecuteCoarseMove)
 
-    target_pose = geometry_msgs.msg.Pose()
-     
-    target_pose = userdata.robot_movements_input
-    print(target_pose)
+    
 
-    TODO: this part is left for testing.. and error occurs when passing the parameters
-    #resp = execute_coarse_move(target_pose,"sda10f")
+    #TODO: this part is left for testing.. and error occurs when passing the parameters
+    req = ExecuteCoarseMoveRequest()
+    req.target_pose.position = userdata.robot_movements_input.position
+    req.target_pose.orientation = userdata.robot_movements_input.orientation
+    
+    req.move_group = "sda10f"
+    
+    resp = execute_coarse_move(req)
     
     
     rospy.loginfo('CREATE PICK MOVES')
     
-    #if(resp.success):
-      
-    return 'success'
-    #else:
-    #  return 'error' 
+    if(resp.success):
+      return 'success'
+    else:
+      return 'error' 
             
                 
     if self.preempt_requested():

@@ -60,7 +60,6 @@ find_package(catkin REQUIRED COMPONENTS
  add_service_files(DIRECTORY srv FILES
    MoveToHome.srv
    CreatePickMovements.srv
-   ExecuteCoarseMotion.srv
    ExecuteCoarseMove.srv
  )
 

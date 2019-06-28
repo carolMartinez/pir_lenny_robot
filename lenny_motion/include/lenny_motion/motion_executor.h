@@ -11,7 +11,10 @@
 #include <moveit_msgs/GetMotionPlan.h>
 #include <moveit/robot_state/conversions.h>
 
+//#include <tf/transform_listener.h>
+#include <tf2_ros/transform_listener.h>
 #include <tf/transform_listener.h>
+
 
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Pose.h>
@@ -25,7 +28,7 @@
 #include <apc16delft_msgs/ExecuteCalibrationMotion.h>*/
 #include <lenny_msgs/MoveToHome.h>
 #include <lenny_msgs/CreatePickMovements.h>
-#include <lenny_msgs/ExecuteCoarseMotion.h>
+
 #include <lenny_msgs/ExecuteCoarseMove.h>
 
 
@@ -107,7 +110,6 @@ protected:
 	
 	bool createPickMovements(lenny_msgs::CreatePickMovements::Request & req, lenny_msgs::CreatePickMovements::Response & res);
 
-	bool executeCoarseMotion(lenny_msgs::ExecuteCoarseMotion::Request & req, lenny_msgs::ExecuteCoarseMotion::Response & res);
 	
 	bool executeCoarseMove(lenny_msgs::ExecuteCoarseMove::Request & req, lenny_msgs::ExecuteCoarseMove::Response & res);
 	

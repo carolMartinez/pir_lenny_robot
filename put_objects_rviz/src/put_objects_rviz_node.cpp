@@ -187,7 +187,7 @@
 
 
          //Nicolas bottle
-box_pose.orientation.w = -0.011;
+        box_pose.orientation.w = -0.011;
          box_pose.orientation.x =  0.7090;
          box_pose.orientation.y = 0.7050;
          box_pose.orientation.z =  0.01055;

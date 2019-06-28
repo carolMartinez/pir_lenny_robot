@@ -37,7 +37,6 @@ MotionExecutor::MotionExecutor() :
 
   create_pick_movements_          = node_handle_.advertiseService("create_pick_movements", &MotionExecutor::createPickMovements, this);
   
-  execute_coarse_motion_          = node_handle_.advertiseService("execute_coarse_motion", &MotionExecutor::executeCoarseMotion, this);
 
   execute_coarse_move_          = node_handle_.advertiseService("execute_coarse_move", &MotionExecutor::executeCoarseMove, this);
 
@@ -411,7 +410,7 @@ bool MotionExecutor::createPickMovements(lenny_msgs::CreatePickMovements::Reques
 
   
   geometry_msgs::Pose start_pose, target_pose, end_pose;
-  std::vector<geometry_msgs::Pose> poses;
+  std::vector<geometry_msgs::Pose> poses, wrist_pick_poses;
 
   // creating start pose by applying a translation along +z by approach distance
   // creating start pose by applying a translation along +X by approach distance (nico)
@@ -422,118 +421,68 @@ bool MotionExecutor::createPickMovements(lenny_msgs::CreatePickMovements::Reques
   // converting target pose
   tf::poseTFToMsg(world_to_tcp_tf,target_pose);
 
-  // creating end pose by applying a translation along +z by retreat distance
-  tf::poseTFToMsg(Transform(Quaternion::getIdentity(),Vector3(0,0,0.3))*world_to_tcp_tf,end_pose);
-
+  
+    
   poses.clear();
   poses.push_back(start_pose);
   poses.push_back(target_pose);
   poses.push_back(end_pose);
   
+  //tcp to wrist = poses
+  //Tf listener
+  //I need the trasnformation between wrist and tcp
+  tf2_ros::Buffer tfBuffer;
+  tf2_ros::TransformListener tfListener(tfBuffer);
+  // creating end pose by applying a translation along +z by retreat distance
+  tf::poseTFToMsg(Transform(Quaternion::getIdentity(),Vector3(0,0,0.3))*world_to_tcp_tf,end_pose);
+  geometry_msgs::Transform tcp_to_wrist_tf;
+  geometry_msgs::TransformStamped tcp_to_wrist_tf_stamped;
   
   
-  res.success = true;
-  res.robot_movements = poses;
+  try
+  {
+    tcp_to_wrist_tf_stamped = tfBuffer.lookupTransform("arm_right_tcp_link", " arm_right_link_7_t",ros::Time(0));
+    tcp_to_wrist_tf = tcp_to_wrist_tf_stamped.transform;
+    // array for poses of the wrist
   
-  return true;
-}
+    std::vector<geometry_msgs::Pose> wrist_poses;
+    wrist_poses.resize(poses.size());
 
+    // applying transform to each tcp poses
+    tf::Transform world_to_wrist_tf, world_to_tcp_tf_sec;
+    
+    for(unsigned int i = 0; i < poses.size(); i++)
+    {
+      tf::poseMsgToTF(poses[i],world_to_tcp_tf_sec);
+      TODO problem here
+      world_to_wrist_tf = world_to_tcp_tf_sec*tcp_to_wrist_tf;
+      tf::poseTFToMsg(world_to_wrist_tf,wrist_poses[i]);
+    }
 
-bool MotionExecutor::executeCoarseMotion(lenny_msgs::ExecuteCoarseMotion::Request & req, lenny_msgs::ExecuteCoarseMotion::Response & res) 
-{
-	ROS_DEBUG_STREAM("Received request to execute coarse motion " );
-	geometry_msgs::Pose target_pose;
-	target_pose=req.target_pose;
-
-    moveit::planning_interface::MoveGroupInterface group(req.move_group);
-	current_group_ = &group;
-	current_group_->setGoalTolerance(0.001);
-	current_group_->setPlannerId("RRTConnectk");
-	current_group_->allowReplanning(true);
-	current_group_->setNumPlanningAttempts(10);
-	current_group_->setMaxVelocityScalingFactor(trajectory_velocity_scaling_);
-
-    current_group_->setStartState(*current_group_->getCurrentState());
-
-// constructing motion plan goal constraints
-   std::vector<double> position_tolerances(3,0.01);
-   std::vector<double> orientation_tolerances(3,0.01);
-   geometry_msgs::PoseStamped p;
-   p.header.frame_id = "torso_base_link";
-   p.pose = target_pose;
-   moveit_msgs::Constraints pose_goal = kinematic_constraints::constructGoalConstraints("arm_left_link_7_t",p,0.01,
-				   0.01);
-
-
-
-   // creating motion plan request
-   moveit_msgs::GetMotionPlan motion_plan;
-   moveit_msgs::MotionPlanRequest &plan_req = motion_plan.request.motion_plan_request;
-   moveit_msgs::MotionPlanResponse &plan_res = motion_plan.response.motion_plan_response;
    
-   plan_req.planner_id = "RRTConnectk";
-   plan_req.group_name = req.move_group;
-   plan_req.goal_constraints.push_back(pose_goal);
-   plan_req.allowed_planning_time = 60;
-   plan_req.num_planning_attempts = 10;
-   plan_req.max_velocity_scaling_factor = 0.5;
-
-    //Updating current robot state
-    moveit_msgs::RobotState robot_state;
-    robot_state::RobotStatePtr current_state(current_group_->getCurrentState());
-    const robot_state::JointModelGroup *joint_model_group = current_state->getJointModelGroup(current_group_->getName());
-    current_group_->setStartState(*current_state);
-
-    robot_state::robotStateToRobotStateMsg(*current_state,plan_req.start_state);
-
-
-moveit::planning_interface::MoveGroupInterface::Plan plan;
- // request motion plan
-       bool success = false;
-       //moveit::planning_interface::MoveItErrorCode success;
-       if(motion_plan_client.call(motion_plan) && plan_res.error_code.val == plan_res.error_code.SUCCESS)
-       {
-               // saving motion plan results
-               plan.start_state_ = plan_res.trajectory_start;
-               plan.trajectory_ = plan_res.trajectory;
-               success = true;
-               
-       }
-       
-       if (success)
-       {
-          current_group_->execute(plan);
-          success = motion_utilities_.waitForRobotToStop();
-          
-          if (success)
-          {
-             current_group_->execute(plan);
-              res.success = true;
-              return true;
-          }
-          else 
-          {
-            res.success = false;
-            return false;
-          }
-        }
-        else
-          return false;
-
-
-
-	
-
+    res.success = true;
+    res.robot_movements = wrist_poses;
+    
+    return true;
+  }
+  catch (tf2::TransformException &ex) 
+  {
+    ROS_WARN("%s",ex.what());
+    ros::Duration(1.0).sleep();
+    res.success = false;
+    return false;
+  }
+  
 }
+
+
 
 
 bool MotionExecutor::executeCoarseMove(lenny_msgs::ExecuteCoarseMove::Request & req, lenny_msgs::ExecuteCoarseMove::Response & res) 
 {
-	ROS_DEBUG_STREAM("Received request to execute coarse motion " );
-	geometry_msgs::Pose target_pose;
-	target_pose=req.target_pose;
-
-    moveit::planning_interface::MoveGroupInterface group(req.move_group);
+  ROS_DEBUG_STREAM("Received request to execute coarse motion " );
+              
+  moveit::planning_interface::MoveGroupInterface group(req.move_group);
 	current_group_ = &group;
 	current_group_->setGoalTolerance(0.001);
 	current_group_->setPlannerId("RRTConnectk");
@@ -541,79 +490,97 @@ bool MotionExecutor::executeCoarseMove(lenny_msgs::ExecuteCoarseMove::Request & 
 	current_group_->setNumPlanningAttempts(10);
 	current_group_->setMaxVelocityScalingFactor(trajectory_velocity_scaling_);
 
-    current_group_->setStartState(*current_group_->getCurrentState());
+  current_group_->setStartState(*current_group_->getCurrentState());
 
 // constructing motion plan goal constraints
-   std::vector<double> position_tolerances(3,0.01);
-   std::vector<double> orientation_tolerances(3,0.01);
-   geometry_msgs::PoseStamped p;
-   p.header.frame_id = "torso_base_link";
-   p.pose = target_pose;
-   moveit_msgs::Constraints pose_goal = kinematic_constraints::constructGoalConstraints("arm_left_link_7_t",p,0.01,
-				   0.01);
+  std::vector<double> position_tolerances(3,0.01);
+  std::vector<double> orientation_tolerances(3,0.01);
+  geometry_msgs::PoseStamped p;
+  p.header.frame_id = "torso_base_link";
+  geometry_msgs::Pose target_pose;
+  target_pose=req.target_pose;
+
+  p.pose = target_pose;
+  moveit_msgs::Constraints pose_goal = kinematic_constraints::constructGoalConstraints("arm_left_link_7_t",p,0.01,
+         0.01);
 
 
 
-   // creating motion plan request
-   moveit_msgs::GetMotionPlan motion_plan;
-   moveit_msgs::MotionPlanRequest &plan_req = motion_plan.request.motion_plan_request;
-   moveit_msgs::MotionPlanResponse &plan_res = motion_plan.response.motion_plan_response;
-   
-   plan_req.planner_id = "RRTConnectk";
-   plan_req.group_name = req.move_group;
-   plan_req.goal_constraints.push_back(pose_goal);
-   plan_req.allowed_planning_time = 60;
-   plan_req.num_planning_attempts = 10;
-   plan_req.max_velocity_scaling_factor = 0.5;
+  // creating motion plan request
+  moveit_msgs::GetMotionPlan motion_plan;
+  moveit_msgs::MotionPlanRequest &plan_req = motion_plan.request.motion_plan_request;
+  moveit_msgs::MotionPlanResponse &plan_res = motion_plan.response.motion_plan_response;
 
-    //Updating current robot state
-    moveit_msgs::RobotState robot_state;
-    robot_state::RobotStatePtr current_state(current_group_->getCurrentState());
-    const robot_state::JointModelGroup *joint_model_group = current_state->getJointModelGroup(current_group_->getName());
-    current_group_->setStartState(*current_state);
+  plan_req.planner_id = "RRTConnectk";
+  plan_req.group_name = req.move_group;
+  plan_req.goal_constraints.push_back(pose_goal);
+  plan_req.allowed_planning_time = 60;
+  plan_req.num_planning_attempts = 10;
+  plan_req.max_velocity_scaling_factor = 0.5;
 
-    robot_state::robotStateToRobotStateMsg(*current_state,plan_req.start_state);
+  //Updating current robot state
+  moveit_msgs::RobotState robot_state;
+  robot_state::RobotStatePtr current_state(current_group_->getCurrentState());
+  const robot_state::JointModelGroup *joint_model_group = current_state->getJointModelGroup(current_group_->getName());
+  current_group_->setStartState(*current_state);
+
+  robot_state::robotStateToRobotStateMsg(*current_state,plan_req.start_state);
 
 
-moveit::planning_interface::MoveGroupInterface::Plan plan;
+  moveit::planning_interface::MoveGroupInterface::Plan plan;
  // request motion plan
-       bool success = false;
-       //moveit::planning_interface::MoveItErrorCode success;
-       if(motion_plan_client.call(motion_plan) && plan_res.error_code.val == plan_res.error_code.SUCCESS)
-       {
-               // saving motion plan results
-               plan.start_state_ = plan_res.trajectory_start;
-               plan.trajectory_ = plan_res.trajectory;
-               success = true;
-               
-       }
-       
-       if (success)
-       {
-          current_group_->execute(plan);
-          success = motion_utilities_.waitForRobotToStop();
-          
-          if (success)
-          {
-             current_group_->execute(plan);
-              res.success = true;
-              return true;
-          }
-          else 
-          {
-            res.success = false;
-            return false;
-          }
-        }
-        else
-        {
-          res.success = false;
-          
-          return false;
-        }
-
-
-	
+  bool success = false;
+  //moveit::planning_interface::MoveItErrorCode success;
+  if(motion_plan_client.call(motion_plan) && plan_res.error_code.val == plan_res.error_code.SUCCESS)
+  {
+         // saving motion plan results
+         plan.start_state_ = plan_res.trajectory_start;
+         plan.trajectory_ = plan_res.trajectory;
+         success = true;
+         
+  }
+  else
+  {
+    
+    success = false;
+    
+    ROS_ERROR("No plan found");
+  }
+   
+  /////VOY ACAAAA
+  
+  
+  
+  /* if (success)
+   {
+      current_group_->execute(plan);
+      //success = motion_utilities_.waitForRobotToStop();
+   }*/
+  bool stop;
+  
+  if(success)
+  {
+    current_group_->execute(plan);
+    stop = motion_utilities_.waitForRobotToStop();
+    if(!stop)
+    {
+      res.success = false;
+      return false;
+    }
+    else
+    {
+      res.success = true;
+      return true;
+ 
+    }
+    
+  }
+  else 
+  {
+    res.success = false;
+    return false;
+  }
+  
 
 }
 /*
