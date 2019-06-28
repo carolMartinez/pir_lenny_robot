@@ -2,11 +2,13 @@ import rospy
 import roslib
 import smach
 import moveit_commander
+import tf2_ros
 
 from lenny_msgs.srv import *
 from lenny_msgs.srv import ExecuteCoarseMotion
 
-from tf import TransformListener
+
+#from tf import TransformListener
 
 ## TODO:change this class, this is only for testing purposes
 
@@ -146,36 +148,41 @@ class CreatePickMoves(smach.State):
   def __init__(self):
     smach.State.__init__(self, outcomes=['success','error'],
     output_keys=['robot_movements_output'])
-    self.tf = TransformListener()
-
+    
+    
   def execute(self, userdata):
     
     rospy.wait_for_service('/motion_executor/create_pick_movements')
     
     
     create_pick_movements = rospy.ServiceProxy('/motion_executor/create_pick_movements', CreatePickMovements)
-            
-    #Listen transformation
-    if self.tf.frameExists("/torso_base_link") and self.tf.frameExists("/object_link"):
-            t = self.tf.getLatestCommonTime("/torso_base_link", "/object_link")
-            position, quaternion = self.tf.lookupTransform("/torso_base_link", "/object_link", t)
-            
-            pose = geometry_msgs.Pose()
-            pose.position = position
-            pose.orientation = quaternion
-            
-            
-            
-            resp = create_pick_movements(pose)
-            userdata.robot_movements_output = 1
-            
-            rospy.loginfo('CREATE PICK MOVES')
-            
-            if(resp.success):
-              return 'success'
-            else:
-              return 'error' 
-            
+
+    tfBuffer = tf2_ros.Buffer()
+    listener = tf2_ros.TransformListener(tfBuffer)
+
+    trans = geometry_msgs.msg.Transform()
+    
+    try:
+       trans = tfBuffer.lookup_transform('torso_base_link', 'object_link', rospy.Time(), rospy.Duration(3.0))
+    except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
+       rospy.loginfo('tf Transformation not available')
+
+
+    pose = geometry_msgs.msg.Pose()
+    translation = trans.transform.translation
+    rotation =  trans.transform.rotation
+    pose.position = geometry_msgs.msg.Point(translation.x,translation.y,translation.z)
+    pose.orientation = rotation
+    print(pose)     
+                
+    resp = create_pick_movements(pose)
+    userdata.robot_movements_output = pose
+    rospy.loginfo('CREATE PICK MOVES')
+
+    if(resp.success):
+        return 'success'
+    else:
+       return 'error'
                 
     if self.preempt_requested():
       self.service_preempt()
@@ -210,8 +217,13 @@ class ExecuteCoarseMotion(smach.State):
     rospy.wait_for_service('/motion_executor/execute_coarse_move')
     
     execute_coarse_move=rospy.ServiceProxy('/motion_executor/execute_coarse_move',ExecuteCoarseMove)
+
+    target_pose = geometry_msgs.msg.Pose()
      
-    target_pose = userdata.robot_movements_input      
+    target_pose = userdata.robot_movements_input
+    print(target_pose)
+
+    TODO: this part is left for testing.. and error occurs when passing the parameters
     #resp = execute_coarse_move(target_pose,"sda10f")
     
     
