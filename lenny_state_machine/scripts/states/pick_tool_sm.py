@@ -34,7 +34,7 @@ def makePickToolSM():
 		smach.StateMachine.add(
 				'MOVE_COARSE',ExecuteCoarseMotion(),
 				transitions = {
-					'success':'PLAN_FINE',
+					'success':'MOVE_FINE',
 					'error':'error'},
 				remapping = {'robot_movements_input' : 'sm_user_pose'} 
 		)

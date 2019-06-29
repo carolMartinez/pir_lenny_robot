@@ -176,7 +176,7 @@ class CreatePickMoves(smach.State):
     print(pose)     
                 
     resp = create_pick_movements(pose)
-    userdata.robot_movements_output = pose
+    userdata.robot_movements_output = resp.robot_movements
     rospy.loginfo('CREATE PICK MOVES')
 
     if(resp.success):
@@ -222,15 +222,15 @@ class ExecuteCoarseMotion(smach.State):
 
     #TODO: this part is left for testing.. and error occurs when passing the parameters
     req = ExecuteCoarseMoveRequest()
-    req.target_pose.position = userdata.robot_movements_input.position
-    req.target_pose.orientation = userdata.robot_movements_input.orientation
+    req.target_pose.position = userdata.robot_movements_input[0].position
+    req.target_pose.orientation = userdata.robot_movements_input[0].orientation
     
-    req.move_group = "sda10f"
+    req.move_group = "arm_right"
     
     resp = execute_coarse_move(req)
     
     
-    rospy.loginfo('CREATE PICK MOVES')
+    rospy.loginfo('CREATE COARSE MOVES')
     
     if(resp.success):
       return 'success'

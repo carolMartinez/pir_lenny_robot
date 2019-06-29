@@ -18,6 +18,7 @@ find_package(catkin REQUIRED
 	moveit_msgs
 	#shape_msgs
 	std_msgs
+ 	tf
 	#apc16delft_grasp_synthesizer
 	#dr_eigen
 	#dr_param
