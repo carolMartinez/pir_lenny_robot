@@ -38,7 +38,9 @@ MotionExecutor::MotionExecutor() :
   create_pick_movements_          = node_handle_.advertiseService("create_pick_movements", &MotionExecutor::createPickMovements, this);
   
 
-  execute_coarse_move_          = node_handle_.advertiseService("execute_coarse_move", &MotionExecutor::executeCoarseMove, this);
+  execute_coarse_motion_          = node_handle_.advertiseService("execute_coarse_motion", &MotionExecutor::executeCoarseMotion, this);
+
+  plan_coarse_motion_          = node_handle_.advertiseService("plan_coarse_motion", &MotionExecutor::planCoarseMotion, this);
 
   //Motion plan client
   motion_plan_client = node_handle_.serviceClient<moveit_msgs::GetMotionPlan>("plan_kinematic_path");
@@ -503,9 +505,62 @@ bool MotionExecutor::createPickMovements(lenny_msgs::CreatePickMovements::Reques
 
 
 
-bool MotionExecutor::executeCoarseMove(lenny_msgs::ExecuteCoarseMove::Request & req, lenny_msgs::ExecuteCoarseMove::Response & res) 
+bool MotionExecutor::executeCoarseMotion(lenny_msgs::ExecuteCoarseMotion::Request & req, lenny_msgs::ExecuteCoarseMotion::Response & res) 
 {
   ROS_DEBUG_STREAM("Received request to execute coarse motion " );
+
+	///TODO: do it for the other groups and change the move_home_fuction too
+	if(req.move_group=="arms")
+		current_group_ = &arms_group_;
+	if(req.move_group=="arm_right")
+		current_group_ = &arm_right_group_;
+
+	moveit::planning_interface::MoveGroupInterface::Plan my_plan;
+	
+	my_plan.trajectory_.joint_trajectory = req.coarse_trajectory;
+
+		
+
+	moveit_msgs::RobotState robot_state;
+		
+	const robot_state::JointModelGroup *joint_model_group = current_group_->getCurrentState()->getJointModelGroup(req.move_group);
+
+	// constructing motion plan goal constraints
+	current_group_->setStartState(*current_group_->getCurrentState());
+
+    current_group_->setPlanningTime(10);
+    current_group_->setGoalTolerance(0.01);
+    current_group_->setGoalOrientationTolerance(0.01);
+    current_group_->setGoalPositionTolerance(0.01);
+    current_group_->setMaxVelocityScalingFactor(0.5);
+    current_group_->setPlannerId("RRTkConfigDefault");
+    current_group_->setNumPlanningAttempts(5);
+    current_group_->allowReplanning(true);
+    
+       
+   	current_group_->execute(my_plan);
+   	bool stop;
+	stop = motion_utilities_.waitForRobotToStop();
+	if(!stop)
+	{
+	  res.success = false;
+	  return false;
+	}
+	else
+	{
+	  res.success = true;
+	  return true;
+ 
+	}
+	
+
+}
+
+
+
+bool MotionExecutor::planCoarseMotion(lenny_msgs::PlanCoarseMotion::Request & req, lenny_msgs::PlanCoarseMotion::Response & res) 
+{
+  ROS_DEBUG_STREAM("Received request to PLAN coarse motion" );
 
 	///TODO: do it for the other groups and change the move_home_fuction too
 	if(req.move_group=="arms")
@@ -578,41 +633,39 @@ bool MotionExecutor::executeCoarseMove(lenny_msgs::ExecuteCoarseMove::Request & 
 
 	if(!success)
 	{
-		success = false;
 		ROS_ERROR("No plan found");
+		res.success = false;
+		return false;
+		
+	}
+	else
+	{
+		res.success = true;
+		res.coarse_trajectory = my_plan.trajectory_.joint_trajectory;
+		
+		return true;
+		
+		
 	}
        
-       
-  
-  
-  
-	  bool stop;
-	  
-	  if(success==true)
-	  {
-		current_group_->execute(my_plan);
-		stop = motion_utilities_.waitForRobotToStop();
-		if(!stop)
-		{
-		  res.success = false;
-		  return false;
-		}
-		else
-		{
-		  res.success = true;
-		  return true;
-	 
-		}
-		
-	  }
-	  else 
-	  {
-		res.success = false;
-		return true;
-	  }
   
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /*
 
 bool MotionExecutor::moveToCalibrateShelf(apc16delft_msgs::MoveToCalibrateShelf::Request &, apc16delft_msgs::MoveToCalibrateShelf::Response & res) {

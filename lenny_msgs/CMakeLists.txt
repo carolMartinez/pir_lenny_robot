@@ -14,6 +14,8 @@ find_package(catkin REQUIRED COMPONENTS
   std_srvs
   message_generation
   geometry_msgs
+  moveit_ros_planning_interface
+	
 )
 
 ## System dependencies are found with CMake's conventions
@@ -60,7 +62,8 @@ find_package(catkin REQUIRED COMPONENTS
  add_service_files(DIRECTORY srv FILES
    MoveToHome.srv
    CreatePickMovements.srv
-   ExecuteCoarseMove.srv
+   ExecuteCoarseMotion.srv
+   PlanCoarseMotion.srv
  )
 
 ## Generate actions in the 'action' folder
@@ -75,10 +78,14 @@ generate_messages(
    DEPENDENCIES
    std_msgs
    geometry_msgs
+   moveit_msgs
+		
  )
 
 catkin_package(
   CATKIN_DEPENDS message_runtime roscpp rospy std_msgs geometry_msgs
+  moveit_msgs
+	
 )
 
 ###########

@@ -28,8 +28,8 @@
 #include <apc16delft_msgs/ExecuteCalibrationMotion.h>*/
 #include <lenny_msgs/MoveToHome.h>
 #include <lenny_msgs/CreatePickMovements.h>
-
-#include <lenny_msgs/ExecuteCoarseMove.h>
+#include <lenny_msgs/ExecuteCoarseMotion.h>
+#include <lenny_msgs/PlanCoarseMotion.h>
 
 
 
@@ -75,7 +75,7 @@ private:
 	ros::ServiceServer move_to_home_;
 	ros::ServiceServer create_pick_movements_;
 	ros::ServiceServer execute_coarse_motion_;
-  ros::ServiceServer execute_coarse_move_;
+	ros::ServiceServer plan_coarse_motion_;
   
 	/*
 	ros::ServiceServer move_to_calibrate_shelf_;
@@ -94,12 +94,13 @@ private:
 	
 	robot_state::RobotStatePtr rs_;
   
-  MotionUtilities motion_utilities_;
+	MotionUtilities motion_utilities_;
   
-  geometry_msgs::Pose object_pose_;
+	geometry_msgs::Pose object_pose_;
  // std::vector<geometry_msgs::Pose> pick_move_poses_;
   
   ros::ServiceClient motion_plan_client;
+
 protected:
 	/*bool executeCoarseMotion(apc16delft_msgs::ExecuteCoarseMotion::Request & req, apc16delft_msgs::ExecuteCoarseMotion::Response & res);
 	bool getCoarseMotion(apc16delft_msgs::GetCoarseMotion::Request & req, apc16delft_msgs::GetCoarseMotion::Response & res);
@@ -110,8 +111,9 @@ protected:
 	
 	bool createPickMovements(lenny_msgs::CreatePickMovements::Request & req, lenny_msgs::CreatePickMovements::Response & res);
 
+	bool planCoarseMotion(lenny_msgs::PlanCoarseMotion::Request & req, lenny_msgs::PlanCoarseMotion::Response & res);
 	
-	bool executeCoarseMove(lenny_msgs::ExecuteCoarseMove::Request & req, lenny_msgs::ExecuteCoarseMove::Response & res);
+	bool executeCoarseMotion(lenny_msgs::ExecuteCoarseMotion::Request & req, lenny_msgs::ExecuteCoarseMotion::Response & res);
 	
 	/*
 	bool moveToCalibrateShelf(apc16delft_msgs::MoveToCalibrateShelf::Request &, apc16delft_msgs::MoveToCalibrateShelf::Response & res);

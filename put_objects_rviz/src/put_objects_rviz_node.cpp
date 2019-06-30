@@ -348,8 +348,8 @@ planning_scene_interface.addCollisionObjects(collision_objects); //add objects t
          box_pose.orientation.x =  0.7090;
          box_pose.orientation.y = 0.7050;
          box_pose.orientation.z =  0.01055;
-         box_pose.position.x =  0.7;
-         box_pose.position.y = -0.4;
+         box_pose.position.x =  0.47;
+         box_pose.position.y = 0.02;
          box_pose.position.z =  1.05;
 
 

@@ -193,13 +193,37 @@ class CreatePickMoves(smach.State):
 
 
 
-class PlanCoarseMotion(smach.State):
+
+class PlanCoarseMove(smach.State):
   def __init__(self):
-    smach.State.__init__(self, outcomes=['success','error'])
+    smach.State.__init__(self, outcomes=['success','error'], input_keys=['robot_movements_input'], output_keys=['coarse_trajectory_output'])
 
   def execute(self, userdata):
+    
+    
+    rospy.wait_for_service('/motion_executor/plan_coarse_motion')
+    
+    plan_coarse_motion=rospy.ServiceProxy('/motion_executor/plan_coarse_motion',PlanCoarseMotion)
+
+
+    req = PlanCoarseMotionRequest()
+    req.target_pose.position = userdata.robot_movements_input[0].position
+    req.target_pose.orientation = userdata.robot_movements_input[0].orientation
+    
+    req.move_group = "arm_right"
+    
+    resp = plan_coarse_motion(req)
+
+    userdata.coarse_trajectory_output = resp.coarse_trajectory
     rospy.loginfo('PLAN COARSE MOTION')
-    rospy.sleep(5)
+
+    
+    if(resp.success):
+      return 'success'
+    else:
+      return 'error' 
+            
+                
     if self.preempt_requested():
       self.service_preempt()
       return 'error'
@@ -207,24 +231,22 @@ class PlanCoarseMotion(smach.State):
       return 'success'
 
 
-class ExecuteCoarseMotion(smach.State):
+class ExecuteCoarseMove(smach.State):
   def __init__(self):
-    smach.State.__init__(self, outcomes=['success','error'], input_keys=['robot_movements_input'])
+    smach.State.__init__(self, outcomes=['success','error'], input_keys=['coarse_trajectory_input'])
 
   def execute(self, userdata):
     
     
-    rospy.wait_for_service('/motion_executor/execute_coarse_move')
+    rospy.wait_for_service('/motion_executor/execute_coarse_motion')
     
-    execute_coarse_move=rospy.ServiceProxy('/motion_executor/execute_coarse_move',ExecuteCoarseMove)
+    execute_coarse_move=rospy.ServiceProxy('/motion_executor/execute_coarse_motion',ExecuteCoarseMotion)
 
     
 
     #TODO: this part is left for testing.. and error occurs when passing the parameters
-    req = ExecuteCoarseMoveRequest()
-    req.target_pose.position = userdata.robot_movements_input[0].position
-    req.target_pose.orientation = userdata.robot_movements_input[0].orientation
-    
+    req = ExecuteCoarseMotionRequest()
+    req.coarse_trajectory = userdata.coarse_trajectory_input
     req.move_group = "arm_right"
     
     resp = execute_coarse_move(req)
@@ -233,7 +255,7 @@ class ExecuteCoarseMotion(smach.State):
     rospy.loginfo('CREATE COARSE MOVES')
     
     if(resp.success):
-      return 'success'
+		return 'success'
     else:
       return 'error' 
             
