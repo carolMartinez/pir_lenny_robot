@@ -176,7 +176,7 @@ class CreatePickMoves(smach.State):
     print(pose)     
                 
     resp = create_pick_movements(pose)
-    userdata.robot_movements_output = resp.robot_movements
+    userdata.robot_movements_output.append(resp.robot_movements)
     rospy.loginfo('CREATE PICK MOVES')
 
     if(resp.success):
@@ -205,7 +205,7 @@ class PlanCoarseMove(smach.State):
     
     plan_coarse_motion=rospy.ServiceProxy('/motion_executor/plan_coarse_motion',PlanCoarseMotion)
 
-
+//************ estoy cambiando por listas.... el userdata
     req = PlanCoarseMotionRequest()
     req.target_pose.position = userdata.robot_movements_input[0].position
     req.target_pose.orientation = userdata.robot_movements_input[0].orientation
@@ -265,6 +265,48 @@ class ExecuteCoarseMove(smach.State):
       return 'error'
     else:
       return 'success'
+
+
+
+class PlanExecuteFineMove(smach.State):
+  def __init__(self):
+    smach.State.__init__(self, outcomes=['success','error'], input_keys=['robot_movements_input'])
+
+  def execute(self, userdata):
+    
+    
+    rospy.wait_for_service('/motion_executor/plan_execute_fine_motion')
+    
+    plan_execute_fine_move = rospy.ServiceProxy('/motion_executor/plan_execute_fine_motion',PlanExecuteFineMotion)
+
+
+    req = PlanExecuteFineMotionRequest()
+    req.target_poses[0].position = userdata.robot_movements_input[1].position
+    req.target_poses[0].orientation = userdata.robot_movements_input[1].orientation
+    
+    req.target_poses[1].position = userdata.robot_movements_input[2].position
+    req.target_poses[1].orientation = userdata.robot_movements_input[2].orientation
+    
+    req.move_group = "arm_right"
+    
+    resp = plan_execute_fine_motion(req)
+
+    rospy.loginfo('PLAN EXECUTE FINE MOTION')
+
+    
+    if(resp.success):
+      return 'success'
+    else:
+      return 'error' 
+            
+                
+    if self.preempt_requested():
+      self.service_preempt()
+      return 'error'
+    else:
+      return 'success'
+
+
 
 
 

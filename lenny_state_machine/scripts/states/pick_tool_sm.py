@@ -10,7 +10,8 @@ from trajectory_msgs.msg import JointTrajectory
 def makePickToolSM():
 	sm = smach.StateMachine(outcomes=['success','error'])
 
-	sm.userdata.sm_user_pose    = geometry_msgs.msg.Pose()
+	sm.userdata.sm_user_pose = []
+  #   = geometry_msgs.msg.Pose()
 	sm.userdata.sm_trajectory    = trajectory_msgs.msg.JointTrajectory()
 	
 	with sm:
@@ -45,16 +46,18 @@ def makePickToolSM():
 		smach.StateMachine.add(
 				'MOVE_COARSE',ExecuteCoarseMove(),
 				transitions = {
-					'success':'MOVE_FINE',
+					'success':'PLAN_MOVE_FINE',
 					'error':'error'},
 				remapping = {'coarse_trajectory_input' : 'sm_trajectory'} 
 		)
+    
 				
 		smach.StateMachine.add(
-				'PLAN_FINE',PlanFineMotion(),
+				'PLAN_MOVE_FINE',PlanExecuteFineMove(),
 				transitions = {
 					'success':'MOVE_FINE',
-					'error':'error'}
+					'error':'error'},
+          remapping = {'robot_movements_input' : 'sm_user_pose'} 
 		)
 		## TODO: change for makePlaceToolSM
 		smach.StateMachine.add(

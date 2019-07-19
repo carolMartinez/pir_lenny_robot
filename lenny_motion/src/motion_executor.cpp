@@ -17,7 +17,7 @@ MotionExecutor::MotionExecutor() :
 	arm_left_group_("arm_left"),
 	torso_group_("torso"),
 	sda10f_group_("sda10f"),
-	current_group_(&arm_right_group_),
+	current_moveit_group_(&arm_right_group_),
 	trajectory_velocity_scaling_(0.1)
 {
 	spinner.start();
@@ -42,6 +42,10 @@ MotionExecutor::MotionExecutor() :
 
   plan_coarse_motion_          = node_handle_.advertiseService("plan_coarse_motion", &MotionExecutor::planCoarseMotion, this);
 
+  plan_execute_fine_motion_          = node_handle_.advertiseService("plan_execute_fine_motion", &MotionExecutor::planExecuteFineMotion, this);
+
+  //plan_fine_motion_          = node_handle_.advertiseService("plan_fine_motion", &MotionExecutor::planFineMotion, this);
+
   //Motion plan client
   motion_plan_client = node_handle_.serviceClient<moveit_msgs::GetMotionPlan>("plan_kinematic_path");
  
@@ -53,8 +57,8 @@ MotionExecutor::MotionExecutor() :
 	*/
 
 	// Fill cache with all yaml files from directory.
-	//current_group_->setMaxVelocityScalingFactor(trajectory_velocity_scaling_);
-	rs_ = current_group_->getCurrentState();
+	//current_moveit_group_->setMaxVelocityScalingFactor(trajectory_velocity_scaling_);
+	rs_ = current_moveit_group_->getCurrentState();
 }
 
 /*
@@ -70,14 +74,14 @@ bool MotionExecutor::executeCoarseMotion(apc16delft_msgs::ExecuteCoarseMotion::R
 		return true;
 	}
 
-	current_group_ = req.target.group_name == apc16delft_msgs::MasterPoseDescriptor::GROUP_TOOL0 ? &tool0_group_ : &tool1_group_;
-	current_group_->setGoalTolerance(0.001);
+	current_moveit_group_ = req.target.group_name == apc16delft_msgs::MasterPoseDescriptor::GROUP_TOOL0 ? &tool0_group_ : &tool1_group_;
+	current_moveit_group_->setGoalTolerance(0.001);
 
 
-	if (motion_sanity_checker_.checkTrajectorySanity(cached_trajectory, current_group_)) {
+	if (motion_sanity_checker_.checkTrajectorySanity(cached_trajectory, current_moveit_group_)) {
 		// Set the motion plan trajectory to be the found trajectory in cache.
 		plan_.trajectory_.joint_trajectory = cached_trajectory;
-		current_group_->execute(plan_);
+		current_moveit_group_->execute(plan_);
 		motion_sanity_checker_.waitForRobotToStop();
 		return true;
 	} else {
@@ -162,8 +166,8 @@ bool MotionExecutor::executeStitchedMotion(apc16delft_msgs::ExecuteStitchedMotio
 	}
 
 	rs_->setVariablePositions(plan_.trajectory_.joint_trajectory.joint_names, plan_.trajectory_.joint_trajectory.points.front().positions);
-	current_group_->setStartState(*rs_);
-	robot_trajectory::RobotTrajectory rt(rs_->getRobotModel(), current_group_->getName());
+	current_moveit_group_->setStartState(*rs_);
+	robot_trajectory::RobotTrajectory rt(rs_->getRobotModel(), current_moveit_group_->getName());
 
 	// Fill robot trajectory with computed cartesian path
 	rt.setRobotTrajectoryMsg(*rs_, plan_.trajectory_);
@@ -202,15 +206,15 @@ bool MotionExecutor::executeStitchedMotion(apc16delft_msgs::ExecuteStitchedMotio
 
 
 	// perform motion sanity check for final trajectory and execute.
-	if (!motion_sanity_checker_.checkTrajectorySanity(plan_.trajectory_.joint_trajectory, current_group_)) {
+	if (!motion_sanity_checker_.checkTrajectorySanity(plan_.trajectory_.joint_trajectory, current_moveit_group_)) {
 		res.error.code = MotionExecutor::MOTION_SAFETY_VIOLATION;
 		res.error.message = "Motion safety violation!";
 		return true;
 	}
 
 	trajectory_tracker_.startTracking(plan_.trajectory_.joint_trajectory);
-	current_group_->setGoalTolerance(0.001);
-	bool success = current_group_->execute(plan_);
+	current_moveit_group_->setGoalTolerance(0.001);
+	bool success = current_moveit_group_->execute(plan_);
 	//trajectory_tracker_.stopTracking();
 
 	if (!success) {
@@ -230,10 +234,10 @@ bool MotionExecutor::executeFineMotion(apc16delft_msgs::ExecuteFineMotion::Reque
 		return true;
 	}
 
-	if (motion_sanity_checker_.checkTrajectorySanity(req.trajectory, current_group_)) {
+	if (motion_sanity_checker_.checkTrajectorySanity(req.trajectory, current_moveit_group_)) {
 		plan_.trajectory_.joint_trajectory = req.trajectory;
-		current_group_->setGoalTolerance(0.001);
-		current_group_->execute(plan_);
+		current_moveit_group_->setGoalTolerance(0.001);
+		current_moveit_group_->execute(plan_);
 		motion_sanity_checker_.waitForRobotToStop();
 		res.error.code = apc16delft_msgs::Error::SUCCESS;
 		res.error.message = "Suceesfully executed fine motion.";
@@ -280,45 +284,45 @@ bool MotionExecutor::checkCalibrationTrajectorySanity(trajectory_msgs::JointTraj
 bool MotionExecutor::executeCalibrationMotion(apc16delft_msgs::ExecuteCalibrationMotion::Request & req, apc16delft_msgs::ExecuteCalibrationMotion::Response & res) {
 	ROS_INFO_STREAM("Received request to execute calibration motion to " << req.calibration_pose << ".");
 
-	current_group_ = &tool0_group_;
-	current_group_->clearPoseTargets();
+	current_moveit_group_ = &tool0_group_;
+	current_moveit_group_->clearPoseTargets();
 
 	std::vector<double> joint_value_current;
 	std::vector<double> joint_value_target;
 
 
-	robot_state::RobotStatePtr current_state(current_group_->getCurrentState());
-	const robot_state::JointModelGroup *jmg = current_state->getJointModelGroup(current_group_->getName());
+	robot_state::RobotStatePtr current_state(current_moveit_group_->getCurrentState());
+	const robot_state::JointModelGroup *jmg = current_state->getJointModelGroup(current_moveit_group_->getName());
 
 	current_state->copyJointGroupPositions(jmg,joint_value_current);
 
-	const robot_state::RobotState target_state = current_group_->getJointValueTarget();
+	const robot_state::RobotState target_state = current_moveit_group_->getJointValueTarget();
 
-	current_group_->setJointValueTarget(req.calibration_pose, "gripper_tool0");
-	current_group_->setMaxVelocityScalingFactor(trajectory_velocity_scaling_);
+	current_moveit_group_->setJointValueTarget(req.calibration_pose, "gripper_tool0");
+	current_moveit_group_->setMaxVelocityScalingFactor(trajectory_velocity_scaling_);
 	moveit::planning_interface::MoveGroup::Plan calibration_motion_plan;
 
-	current_group_->setStartState(*current_state);
-	current_group_->setPlannerId("RRTConnectkConfigDefault");
+	current_moveit_group_->setStartState(*current_state);
+	current_moveit_group_->setPlannerId("RRTConnectkConfigDefault");
 
-	current_group_->allowReplanning(true);
-	current_group_->setNumPlanningAttempts(5);
+	current_moveit_group_->allowReplanning(true);
+	current_moveit_group_->setNumPlanningAttempts(5);
 
-	if (current_group_->plan(calibration_motion_plan) != 1) {
+	if (current_moveit_group_->plan(calibration_motion_plan) != 1) {
 		ROS_ERROR_STREAM("No motion plan found. Pose rejected.");
 		res.error.code    = 1; // TODO
 		res.error.message = "No motion plan found..";
 		return false;
 	}
 
-	if (!checkCalibrationTrajectorySanity(calibration_motion_plan.trajectory_.joint_trajectory, current_group_)) {
+	if (!checkCalibrationTrajectorySanity(calibration_motion_plan.trajectory_.joint_trajectory, current_moveit_group_)) {
 		ROS_INFO_STREAM("Calibration motion not allowed due to configuration change.");
 		res.error.code    = 1; // TODO
 		res.error.message = "Resulting plan has a configuration change. Rejecting.";
 		return false;
 	}
 
-	if (!motion_sanity_checker_.checkTrajectorySanity(calibration_motion_plan.trajectory_.joint_trajectory, current_group_)) {
+	if (!motion_sanity_checker_.checkTrajectorySanity(calibration_motion_plan.trajectory_.joint_trajectory, current_moveit_group_)) {
 		ROS_ERROR_STREAM("Calibration motion trajectory sanity check failed!");
 		res.error.code    = 1; // TODO
 		res.error.message = "Calibration trajectory not safe to execute";
@@ -326,7 +330,7 @@ bool MotionExecutor::executeCalibrationMotion(apc16delft_msgs::ExecuteCalibratio
 	}
 
 	ROS_INFO_STREAM("Executing calibration motion.");
-	current_group_->execute(calibration_motion_plan);
+	current_moveit_group_->execute(calibration_motion_plan);
 	return true;
 }
 
@@ -336,18 +340,18 @@ bool MotionExecutor::moveToHome(lenny_msgs::MoveToHome::Request & req, lenny_msg
 {
 	
 	moveit::planning_interface::MoveGroupInterface group(req.move_group);
-	current_group_ = &group;
-	current_group_->setGoalTolerance(0.001);
-	current_group_->clearPoseTargets();
-	current_group_->setPlannerId("RRTConnectkConfigDefault");
+	current_moveit_group_ = &group;
+	current_moveit_group_->setGoalTolerance(0.001);
+	current_moveit_group_->clearPoseTargets();
+	current_moveit_group_->setPlannerId("RRTConnectkConfigDefault");
 
-	current_group_->allowReplanning(true);
-	current_group_->setNumPlanningAttempts(10);
-	current_group_->setMaxVelocityScalingFactor(trajectory_velocity_scaling_);
+	current_moveit_group_->allowReplanning(true);
+	current_moveit_group_->setNumPlanningAttempts(10);
+	current_moveit_group_->setMaxVelocityScalingFactor(trajectory_velocity_scaling_);
 
-    current_group_->setStartState(*current_group_->getCurrentState());
+    current_moveit_group_->setStartState(*current_moveit_group_->getCurrentState());
 
-	//geometry_msgs::PoseStamped gripper_current_pose = current_group_->getCurrentPose("gripper_tool0");
+	//geometry_msgs::PoseStamped gripper_current_pose = current_moveit_group_->getCurrentPose("gripper_tool0");
 
 	/*if(gripper_current_pose.pose.position.y > 0.44) {
 		ROS_ERROR_STREAM("Preventing the robot from breaking the shelf again.");
@@ -356,12 +360,12 @@ bool MotionExecutor::moveToHome(lenny_msgs::MoveToHome::Request & req, lenny_msg
 		return true;
 	}*/
 
-	current_group_->setNamedTarget(req.pose_name);
+	current_moveit_group_->setNamedTarget(req.pose_name);
 
     
 	moveit::planning_interface::MoveGroupInterface::Plan motion_plan;
   
-	if (current_group_->plan(motion_plan) != 1)
+	if (current_moveit_group_->plan(motion_plan) != 1)
 	{
        ROS_ERROR_STREAM("No motion plan found.");
        res.success = false;
@@ -370,7 +374,7 @@ bool MotionExecutor::moveToHome(lenny_msgs::MoveToHome::Request & req, lenny_msg
 	}
 
 
-	bool success = (current_group_->execute(motion_plan)== moveit::planning_interface::MoveItErrorCode::SUCCESS);
+	bool success = (current_moveit_group_->execute(motion_plan)== moveit::planning_interface::MoveItErrorCode::SUCCESS);
 //bool success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
 
   ROS_INFO_STREAM("Waiting for robot to STOP");
@@ -393,10 +397,25 @@ bool MotionExecutor::moveToHome(lenny_msgs::MoveToHome::Request & req, lenny_msg
 	
 }
 
+bool MotionExecutor::checkWayPointReachability(const geometry_msgs::Pose& waypoint) 
+{
+  bool found_ik = kinematic_state_->setFromIK(joint_model_group_, waypoint, 3, 0.005);
+  if(found_ik)
+  {
+    ROS_DEBUG_STREAM("Found IK " );
+
+  }
+  else
+  {
+    ROS_INFO("Did not find IK solution");
+  }
+  
+}
 
 bool MotionExecutor::createPickMovements(lenny_msgs::CreatePickMovements::Request & req, lenny_msgs::CreatePickMovements::Response & res) 
 {
 	ROS_DEBUG_STREAM("Received request to create pick moves " );
+
 
   tf::Transform world_to_tcp_tf;
   tf::Transform world_to_object_tf;
@@ -425,15 +444,18 @@ bool MotionExecutor::createPickMovements(lenny_msgs::CreatePickMovements::Reques
   // creating start pose by applying a translation along +X by approach distance (nico)
   
   tf::poseTFToMsg(Transform(Quaternion::getIdentity(),Vector3(0,0,0.2))*world_to_tcp_tf,start_pose);
-
+  
  
   // converting target pose
   tf::poseTFToMsg(world_to_tcp_tf,target_pose);
+   
+  
 
  
  // creating end pose by applying a translation along +z by retreat distance
   tf::poseTFToMsg(Transform(Quaternion::getIdentity(),Vector3(0,0,0.3))*world_to_tcp_tf,end_pose);
-   
+  
+  ///TODO: do something if waypoint is not reachable   
   poses.clear();
   poses.push_back(start_pose);
   poses.push_back(target_pose);
@@ -454,7 +476,7 @@ bool MotionExecutor::createPickMovements(lenny_msgs::CreatePickMovements::Reques
   try
   {
 	 
-	listener.waitForTransform("arm_right_tcp_link", "arm_right_link_7_t",ros::Time::now(),ros::Duration(3.0f));
+	  listener.waitForTransform("arm_right_tcp_link", "arm_right_link_7_t",ros::Time::now(),ros::Duration(3.0f));
     listener.lookupTransform("arm_right_tcp_link", "arm_right_link_7_t", ros::Time(0), tcp_to_wrist_tf);
 
 	
@@ -511,9 +533,9 @@ bool MotionExecutor::executeCoarseMotion(lenny_msgs::ExecuteCoarseMotion::Reques
 
 	///TODO: do it for the other groups and change the move_home_fuction too
 	if(req.move_group=="arms")
-		current_group_ = &arms_group_;
+		current_moveit_group_ = &arms_group_;
 	if(req.move_group=="arm_right")
-		current_group_ = &arm_right_group_;
+		current_moveit_group_ = &arm_right_group_;
 
 	moveit::planning_interface::MoveGroupInterface::Plan my_plan;
 	
@@ -523,22 +545,22 @@ bool MotionExecutor::executeCoarseMotion(lenny_msgs::ExecuteCoarseMotion::Reques
 
 	moveit_msgs::RobotState robot_state;
 		
-	const robot_state::JointModelGroup *joint_model_group = current_group_->getCurrentState()->getJointModelGroup(req.move_group);
+	const robot_state::JointModelGroup *joint_model_group = current_moveit_group_->getCurrentState()->getJointModelGroup(req.move_group);
 
 	// constructing motion plan goal constraints
-	current_group_->setStartState(*current_group_->getCurrentState());
+	current_moveit_group_->setStartState(*current_moveit_group_->getCurrentState());
 
-    current_group_->setPlanningTime(10);
-    current_group_->setGoalTolerance(0.01);
-    current_group_->setGoalOrientationTolerance(0.01);
-    current_group_->setGoalPositionTolerance(0.01);
-    current_group_->setMaxVelocityScalingFactor(0.5);
-    current_group_->setPlannerId("RRTkConfigDefault");
-    current_group_->setNumPlanningAttempts(5);
-    current_group_->allowReplanning(true);
+    current_moveit_group_->setPlanningTime(10);
+    current_moveit_group_->setGoalTolerance(0.01);
+    current_moveit_group_->setGoalOrientationTolerance(0.01);
+    current_moveit_group_->setGoalPositionTolerance(0.01);
+    current_moveit_group_->setMaxVelocityScalingFactor(0.5);
+    current_moveit_group_->setPlannerId("RRTkConfigDefault");
+    current_moveit_group_->setNumPlanningAttempts(5);
+    current_moveit_group_->allowReplanning(true);
     
        
-   	current_group_->execute(my_plan);
+   	current_moveit_group_->execute(my_plan);
    	bool stop;
 	stop = motion_utilities_.waitForRobotToStop();
 	if(!stop)
@@ -564,14 +586,24 @@ bool MotionExecutor::planCoarseMotion(lenny_msgs::PlanCoarseMotion::Request & re
 
 	///TODO: do it for the other groups and change the move_home_fuction too
 	if(req.move_group=="arms")
-		current_group_ = &arms_group_;
+		current_moveit_group_ = &arms_group_;
 	if(req.move_group=="arm_right")
-		current_group_ = &arm_right_group_;
+		current_moveit_group_ = &arm_right_group_;
+
+
+ /// kinematic_state_: it is the current kinematic configuration of the robot
+  kinematic_state_ = moveit::core::RobotStatePtr(current_moveit_group_->getCurrentState());
+  kinematic_state_->setToDefaultValues();
+  
+  const robot_model::RobotModelConstPtr &kmodel = kinematic_state_->getRobotModel();
+  joint_model_group_ = kmodel->getJointModelGroup(req.move_group);
+  
+
 
 
 	moveit_msgs::RobotState robot_state;
 		
-	const robot_state::JointModelGroup *joint_model_group = current_group_->getCurrentState()->getJointModelGroup(req.move_group);
+	const robot_state::JointModelGroup *joint_model_group = current_moveit_group_->getCurrentState()->getJointModelGroup(req.move_group);
 
 	// constructing motion plan goal constraints
     std::vector<double> position_tolerances(3,0.01);
@@ -582,71 +614,88 @@ bool MotionExecutor::planCoarseMotion(lenny_msgs::PlanCoarseMotion::Request & re
 	target_pose=req.target_pose;
 
 
-    
-	p.pose = target_pose;
-	moveit_msgs::Constraints pose_goal = kinematic_constraints::constructGoalConstraints("arm_rigth_link_7_t",p,0.01,
-	0.01);
+  //Check reachability
+  //bool foundIK = false;
+  //foundIK = checkWayPointReachability(target_pose);
+  
+  //if(foundIK)
+  //{ 
+  
 
-	// creating motion plan request
-	moveit_msgs::GetMotionPlan motion_plan;
-	moveit_msgs::MotionPlanRequest &plan_req = motion_plan.request.motion_plan_request;
-	moveit_msgs::MotionPlanResponse &plan_res = motion_plan.response.motion_plan_response;
-	plan_req.start_state = robot_state;
-    plan_req.start_state.is_diff = true;
+
+    
+      p.pose = target_pose;
+      moveit_msgs::Constraints pose_goal = kinematic_constraints::constructGoalConstraints("arm_rigth_link_7_t",p,0.01,
+      0.01);
+
+      // creating motion plan request
+      moveit_msgs::GetMotionPlan motion_plan;
+      moveit_msgs::MotionPlanRequest &plan_req = motion_plan.request.motion_plan_request;
+      moveit_msgs::MotionPlanResponse &plan_res = motion_plan.response.motion_plan_response;
+      plan_req.start_state = robot_state;
+        plan_req.start_state.is_diff = true;
+           
+      plan_req.planner_id = "RRTkConfigDefault";
+      plan_req.group_name = req.move_group;
+      plan_req.goal_constraints.push_back(pose_goal);
+      plan_req.allowed_planning_time = 60;
+      plan_req.num_planning_attempts = 10;
+      plan_req.max_velocity_scaling_factor = 0.5;
+
+    //std::cout << target_pose << std::endl;
+     
+      // request motion plan
+      //bool success = false;
+      current_moveit_group_->setPoseTarget(target_pose);
+        current_moveit_group_->setStartState(*current_moveit_group_->getCurrentState());
+
+      moveit::planning_interface::MoveGroupInterface::Plan my_plan;
+      //moveit::planning_interface::MoveItErrorCode success;
+
+      /*if(motion_plan_client.call(motion_plan) && plan_res.error_code.val == plan_res.error_code.SUCCESS)
+      {
+           // saving motion plan results
+           plan.start_state_ = plan_res.trajectory_start;
+           plan.trajectory_ = plan_res.trajectory;
+           success = true;
+           
+      }*/
+        current_moveit_group_->setPlanningTime(10);
+        current_moveit_group_->setGoalTolerance(0.01);
+        current_moveit_group_->setGoalOrientationTolerance(0.01);
+        current_moveit_group_->setGoalPositionTolerance(0.01);
+        current_moveit_group_->setMaxVelocityScalingFactor(0.5);
+        current_moveit_group_->setPlannerId("RRTkConfigDefault");
+        current_moveit_group_->setNumPlanningAttempts(5);
+        current_moveit_group_->allowReplanning(true);
+        
        
-	plan_req.planner_id = "RRTkConfigDefault";
-	plan_req.group_name = req.move_group;
-	plan_req.goal_constraints.push_back(pose_goal);
-	plan_req.allowed_planning_time = 60;
-	plan_req.num_planning_attempts = 10;
-	plan_req.max_velocity_scaling_factor = 0.5;
+      bool success = (current_moveit_group_->plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
 
-//std::cout << target_pose << std::endl;
- 
-	// request motion plan
-	//bool success = false;
-	current_group_->setPoseTarget(target_pose);
-    current_group_->setStartState(*current_group_->getCurrentState());
-
-	moveit::planning_interface::MoveGroupInterface::Plan my_plan;
-	//moveit::planning_interface::MoveItErrorCode success;
-
-	/*if(motion_plan_client.call(motion_plan) && plan_res.error_code.val == plan_res.error_code.SUCCESS)
-	{
-		   // saving motion plan results
-		   plan.start_state_ = plan_res.trajectory_start;
-		   plan.trajectory_ = plan_res.trajectory;
-		   success = true;
-		   
-	}*/
-    current_group_->setPlanningTime(10);
-    current_group_->setGoalTolerance(0.01);
-    current_group_->setGoalOrientationTolerance(0.01);
-    current_group_->setGoalPositionTolerance(0.01);
-    current_group_->setMaxVelocityScalingFactor(0.5);
-    current_group_->setPlannerId("RRTkConfigDefault");
-    current_group_->setNumPlanningAttempts(5);
-    current_group_->allowReplanning(true);
+      if(!success)
+      {
+        ROS_ERROR("No plan found");
+        res.success = false;
+        return false;
+        
+      }
+      else
+      {
+        res.success = true;
+        res.coarse_trajectory = my_plan.trajectory_.joint_trajectory;
+        
+        return true;
+        
+        
+      }
+  //}
+  //else
+ // {
+  //  ROS_ERROR("No IK solution found for point Coarse Point");
+  //  res.success = false;
+  //  return false;
     
-   
-	bool success = (current_group_->plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
-
-	if(!success)
-	{
-		ROS_ERROR("No plan found");
-		res.success = false;
-		return false;
-		
-	}
-	else
-	{
-		res.success = true;
-		res.coarse_trajectory = my_plan.trajectory_.joint_trajectory;
-		
-		return true;
-		
-		
-	}
+  //}
        
   
 
@@ -654,6 +703,123 @@ bool MotionExecutor::planCoarseMotion(lenny_msgs::PlanCoarseMotion::Request & re
 
 
 
+
+
+bool MotionExecutor::planExecuteFineMotion(lenny_msgs::PlanExecuteFineMotion::Request & req, lenny_msgs::PlanExecuteFineMotion::Response & res) 
+{
+  ROS_DEBUG_STREAM("Received request to PLAN fine motion" );
+
+	///TODO: do it for the other groups and change the move_home_fuction too
+	if(req.move_group=="arms")
+		current_moveit_group_ = &arms_group_;
+	if(req.move_group=="arm_right")
+		current_moveit_group_ = &arm_right_group_;
+ 
+  /// kinematic_state_: it is the current kinematic configuration of the robot
+  kinematic_state_ = moveit::core::RobotStatePtr(current_moveit_group_->getCurrentState());
+  kinematic_state_->setToDefaultValues();
+  
+  const robot_model::RobotModelConstPtr &kmodel = kinematic_state_->getRobotModel();
+  joint_model_group_ = kmodel->getJointModelGroup(req.move_group);
+  
+  
+  current_moveit_group_->setPlanningTime(10);
+  current_moveit_group_->allowReplanning(true);
+  
+  ///TODO: check for pose if it is possible
+  ///TODO: load parameters for planning from a yaml including for catesian path
+  
+
+  moveit::planning_interface::MoveGroupInterface::Plan plan;
+  
+  
+  moveit_msgs::RobotTrajectory trajectory;
+  
+  
+  //Parameters
+  double plan_time = 5;
+  bool moveit_replan = true;
+  bool avoid_collision = true;
+  
+  double cart_step_size = 0.01; //Path interpolation resolution
+  //Threshold to prevent jumps in IK solution
+  double cart_jump_thr = 0.0; // meters 
+  
+  
+   //Check reachability
+  bool foundIK= false;
+  foundIK = checkWayPointReachability(req.target_poses[1]);
+  
+  std::vector<geometry_msgs::Pose> waypoints;
+  double fraction;
+  /// CReate an iterativeParabolicTimeParametrization object
+  //trajectory_processsing::IterativeParabolicTimeParametrization iptp;
+      
+      
+  if(foundIK)
+  {
+      
+      
+      waypoints.push_back(req.target_poses[1]);
+      
+      bool found = false;
+      foundIK = checkWayPointReachability(req.target_poses[2]);
+      
+      if(found)
+        waypoints.push_back(req.target_poses[2]);
+      
+      
+      //Plan cartesian path
+      fraction = current_moveit_group_->computeCartesianPath(waypoints,
+      cart_step_size,cart_jump_thr,trajectory,avoid_collision);
+      
+      robot_trajectory::RobotTrajectory rt(kinematic_state_->getRobotModel(), req.move_group);
+      
+      rt.setRobotTrajectoryMsg(*kinematic_state_,trajectory);
+      
+      ROS_INFO_STREAM("Pose reference frame: " << current_moveit_group_->getPoseReferenceFrame());
+      
+      /// CReate an iterativeParabolicTimeParametrization object
+      //bool success = iptp.computeTimeStamps(rt);
+      //ROS_INFO("Computed time stamps %s ", success? "SUCCEDED":"FAILED");
+      
+      
+      
+      //Get robot trajectory msg
+      rt.getRobotTrajectoryMsg(trajectory);
+      //Plan the trajectory
+      plan.trajectory_= trajectory;
+      ROS_INFO("Visualizing plan (cartesian path) (%.2f%% achieved", fraction *100);
+      
+      
+      current_moveit_group_->execute(plan);
+      kinematic_state_ = current_moveit_group_->getCurrentState();
+      
+      bool stop;
+      stop = motion_utilities_.waitForRobotToStop();
+      if(!stop)
+      {
+        res.success = false;
+        return false;
+      }
+      else
+      {
+        res.success = true;
+        return true;
+     
+      }
+      
+  }
+  else
+  {
+    res.success = false;
+    return false;
+  }
+
+  
+  	
+
+}
 
 
 
@@ -669,23 +835,23 @@ bool MotionExecutor::planCoarseMotion(lenny_msgs::PlanCoarseMotion::Request & re
 /*
 
 bool MotionExecutor::moveToCalibrateShelf(apc16delft_msgs::MoveToCalibrateShelf::Request &, apc16delft_msgs::MoveToCalibrateShelf::Response & res) {
-	current_group_ = &tool0_group_;
-	current_group_->clearPoseTargets ();
-	current_group_->setPlannerId("RRTConnectkConfigDefault");
+	current_moveit_group_ = &tool0_group_;
+	current_moveit_group_->clearPoseTargets ();
+	current_moveit_group_->setPlannerId("RRTConnectkConfigDefault");
 
-	current_group_->allowReplanning(true);
-	current_group_->setNumPlanningAttempts(5);
+	current_moveit_group_->allowReplanning(true);
+	current_moveit_group_->setNumPlanningAttempts(5);
 
-	current_group_->setNamedTarget("calibrate_shelf");
+	current_moveit_group_->setNamedTarget("calibrate_shelf");
 
 	moveit::planning_interface::MoveGroup::Plan motion_plan;
-	if (current_group_->plan(motion_plan) != 1) {
+	if (current_moveit_group_->plan(motion_plan) != 1) {
 		res.error.code    = 1; // TODO
 		res.error.message = "No motion plan found";
 		return false;
 	}
 
-	if (!current_group_->execute(motion_plan)) {
+	if (!current_moveit_group_->execute(motion_plan)) {
 		res.error.code    = 1; // TODO
 		res.error.message = "Failed to execute motion plan.";
 		return false;
@@ -695,23 +861,23 @@ bool MotionExecutor::moveToCalibrateShelf(apc16delft_msgs::MoveToCalibrateShelf:
 }
 
 bool MotionExecutor::moveToCalibrateTote(apc16delft_msgs::MoveToCalibrateTote::Request &, apc16delft_msgs::MoveToCalibrateTote::Response & res) {
-	current_group_ = &tool0_group_;
-	current_group_->clearPoseTargets ();
-	current_group_->setPlannerId("RRTConnectkConfigDefault");
+	current_moveit_group_ = &tool0_group_;
+	current_moveit_group_->clearPoseTargets ();
+	current_moveit_group_->setPlannerId("RRTConnectkConfigDefault");
 
-	current_group_->allowReplanning(true);
-	current_group_->setNumPlanningAttempts(5);
+	current_moveit_group_->allowReplanning(true);
+	current_moveit_group_->setNumPlanningAttempts(5);
 
-	current_group_->setNamedTarget("calibrate_tote");
+	current_moveit_group_->setNamedTarget("calibrate_tote");
 
 	moveit::planning_interface::MoveGroup::Plan motion_plan;
-	if (current_group_->plan(motion_plan) != 1) {
+	if (current_moveit_group_->plan(motion_plan) != 1) {
 		res.error.code    = 1; // TODO
 		res.error.message = "No motion plan found";
 		return false;
 	}
 
-	if (!current_group_->execute(motion_plan)) {
+	if (!current_moveit_group_->execute(motion_plan)) {
 		res.error.code    = 1; // TODO
 		res.error.message = "Failed to execute motion plan.";
 		return false;

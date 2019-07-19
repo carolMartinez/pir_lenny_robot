@@ -2,14 +2,19 @@
 #include <moveit/trajectory_processing/iterative_time_parameterization.h>
 #include <moveit/robot_model_loader/robot_model_loader.h>
 #include <moveit/robot_state/robot_state.h>
+
 #include <moveit_msgs/RobotTrajectory.h>
 #include <moveit_msgs/DisplayTrajectory.h>
+#include <moveit_msgs/GetMotionPlan.h>
+#include <moveit_msgs/PlanningScene.h>
 
-#include <moveit/move_group_interface/move_group_interface.h>
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
 #include <moveit/kinematic_constraints/utils.h>
-#include <moveit_msgs/GetMotionPlan.h>
 #include <moveit/robot_state/conversions.h>
+
+#include <moveit/planning_interface/planning_interface.h>
+#include <moveit/planning_scene/planning_scene.h>
+
 
 #include <tf/transform_listener.h>
 //#include <tf2_ros/transform_listener.h>
@@ -30,7 +35,7 @@
 #include <lenny_msgs/CreatePickMovements.h>
 #include <lenny_msgs/ExecuteCoarseMotion.h>
 #include <lenny_msgs/PlanCoarseMotion.h>
-
+#include <lenny_msgs/PlanExecuteFineMotion.h>
 
 
 /*
@@ -76,6 +81,9 @@ private:
 	ros::ServiceServer create_pick_movements_;
 	ros::ServiceServer execute_coarse_motion_;
 	ros::ServiceServer plan_coarse_motion_;
+  ros::ServiceServer execute_fine_motion_;
+	ros::ServiceServer plan_execute_fine_motion_;
+  
   
 	/*
 	ros::ServiceServer move_to_calibrate_shelf_;
@@ -89,10 +97,14 @@ private:
 	moveit::planning_interface::MoveGroupInterface torso_group_;
 	moveit::planning_interface::MoveGroupInterface sda10f_group_;
 	
-	moveit::planning_interface::MoveGroupInterface * current_group_;
+	moveit::planning_interface::MoveGroupInterface * current_moveit_group_;
 	moveit::planning_interface::MoveGroupInterface::Plan plan_;
 	
 	robot_state::RobotStatePtr rs_;
+  const moveit::core::JointModelGroup* joint_model_group_;
+  
+  
+  moveit::core::RobotStatePtr kinematic_state_;
   
 	MotionUtilities motion_utilities_;
   
@@ -100,6 +112,11 @@ private:
  // std::vector<geometry_msgs::Pose> pick_move_poses_;
   
   ros::ServiceClient motion_plan_client;
+  
+  
+  bool checkWayPointReachability(const geometry_msgs::Pose& waypoint); 
+  
+  
 
 protected:
 	/*bool executeCoarseMotion(apc16delft_msgs::ExecuteCoarseMotion::Request & req, apc16delft_msgs::ExecuteCoarseMotion::Response & res);
@@ -114,6 +131,10 @@ protected:
 	bool planCoarseMotion(lenny_msgs::PlanCoarseMotion::Request & req, lenny_msgs::PlanCoarseMotion::Response & res);
 	
 	bool executeCoarseMotion(lenny_msgs::ExecuteCoarseMotion::Request & req, lenny_msgs::ExecuteCoarseMotion::Response & res);
+	
+  //bool planFineMotion(lenny_msgs::PlanFineMotion::Request & req, lenny_msgs::PlanFineMotion::Response & res);
+	
+	bool planExecuteFineMotion(lenny_msgs::PlanExecuteFineMotion::Request & req, lenny_msgs::PlanExecuteFineMotion::Response & res);
 	
 	/*
 	bool moveToCalibrateShelf(apc16delft_msgs::MoveToCalibrateShelf::Request &, apc16delft_msgs::MoveToCalibrateShelf::Response & res);
