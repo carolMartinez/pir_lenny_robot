@@ -147,7 +147,8 @@ class DetectTool(smach.State):
 class CreatePickMoves(smach.State):
   def __init__(self):
     smach.State.__init__(self, outcomes=['success','error'],
-    output_keys=['robot_movements_output'])
+    output_keys=['robot_movements_output_approach', 'robot_movements_output_preGrasp',
+    'robot_movements_output_grasp','robot_movements_output_retreat'])
     
     
   def execute(self, userdata):
@@ -176,7 +177,27 @@ class CreatePickMoves(smach.State):
     print(pose)     
                 
     resp = create_pick_movements(pose)
-    userdata.robot_movements_output.append(resp.robot_movements)
+
+    #userdata.robot_movements_output = [geometry_msgs.msg.Pose(), geometry_msgs.msg.Pose(), geometry_msgs.msg.Pose()]
+
+	
+    #userdata.robot_movements_output[0].position = resp.robot_movements[0].position
+
+#    userdata.robot_movements_output.append(resp.robot_movements[0])
+    userdata.robot_movements_output_approach = resp.robot_movements[0]
+    userdata.robot_movements_output_preGrasp = resp.robot_movements[1]
+    userdata.robot_movements_output_grasp = resp.robot_movements[1]
+    userdata.robot_movements_output_retreat = resp.robot_movements[2]
+    
+    
+    
+    #userdata.robot_movements_output[0].position = resp.robot_movements[0].position
+    #userdata.robot_movements_output[2] = resp.robot_movements[2]
+    
+    
+   # print(userdata.robot_movements_output[0])
+    
+    
     rospy.loginfo('CREATE PICK MOVES')
 
     if(resp.success):
@@ -196,7 +217,7 @@ class CreatePickMoves(smach.State):
 
 class PlanCoarseMove(smach.State):
   def __init__(self):
-    smach.State.__init__(self, outcomes=['success','error'], input_keys=['robot_movements_input'], output_keys=['coarse_trajectory_output'])
+    smach.State.__init__(self, outcomes=['success','error'], input_keys=['robot_movements_input_approach'], output_keys=['coarse_trajectory_output'])
 
   def execute(self, userdata):
     
@@ -205,10 +226,9 @@ class PlanCoarseMove(smach.State):
     
     plan_coarse_motion=rospy.ServiceProxy('/motion_executor/plan_coarse_motion',PlanCoarseMotion)
 
-//************ estoy cambiando por listas.... el userdata
     req = PlanCoarseMotionRequest()
-    req.target_pose.position = userdata.robot_movements_input[0].position
-    req.target_pose.orientation = userdata.robot_movements_input[0].orientation
+    req.target_pose.position = userdata.robot_movements_input_approach.position
+    req.target_pose.orientation = userdata.robot_movements_input_approach.orientation
     
     req.move_group = "arm_right"
     
@@ -270,7 +290,8 @@ class ExecuteCoarseMove(smach.State):
 
 class PlanExecuteFineMove(smach.State):
   def __init__(self):
-    smach.State.__init__(self, outcomes=['success','error'], input_keys=['robot_movements_input'])
+    smach.State.__init__(self, outcomes=['success','error'], input_keys=['robot_movements_input_grasp',
+    'robot_movements_input_retreat'])
 
   def execute(self, userdata):
     
@@ -281,11 +302,14 @@ class PlanExecuteFineMove(smach.State):
 
 
     req = PlanExecuteFineMotionRequest()
-    req.target_poses[0].position = userdata.robot_movements_input[1].position
-    req.target_poses[0].orientation = userdata.robot_movements_input[1].orientation
+
+    ***************** Se queda ac{a
     
-    req.target_poses[1].position = userdata.robot_movements_input[2].position
-    req.target_poses[1].orientation = userdata.robot_movements_input[2].orientation
+    req.target_poses[0].position = userdata.robot_movements_input_grasp.position
+    req.target_poses[0].orientation = userdata.robot_movements_input_grasp.orientation
+    
+    req.target_poses[1].position = userdata.robot_movements_input_retreat.position
+    req.target_poses[1].orientation = userdata.robot_movements_input_retreat.orientation
     
     req.move_group = "arm_right"
     
