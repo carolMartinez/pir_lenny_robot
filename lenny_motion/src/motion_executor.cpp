@@ -715,9 +715,16 @@ bool MotionExecutor::planExecuteFineMotion(lenny_msgs::PlanExecuteFineMotion::Re
 	if(req.move_group=="arm_right")
 		current_moveit_group_ = &arm_right_group_;
  
-  /// kinematic_state_: it is the current kinematic configuration of the robot
+   
+  moveit_msgs::RobotState robot_state;
+		
+	const robot_state::JointModelGroup *joint_model_group = current_moveit_group_->getCurrentState()->getJointModelGroup(req.move_group);
+	// constructing motion plan goal constraints
+	current_moveit_group_->setStartState(*current_moveit_group_->getCurrentState());
+/// kinematic_state_: it is the current kinematic configuration of the robot
   kinematic_state_ = moveit::core::RobotStatePtr(current_moveit_group_->getCurrentState());
-  kinematic_state_->setToDefaultValues();
+  //kinematic_state_->setToDefaultValues();
+ 
   
   const robot_model::RobotModelConstPtr &kmodel = kinematic_state_->getRobotModel();
   joint_model_group_ = kmodel->getJointModelGroup(req.move_group);
@@ -756,17 +763,28 @@ bool MotionExecutor::planExecuteFineMotion(lenny_msgs::PlanExecuteFineMotion::Re
   //trajectory_processsing::IterativeParabolicTimeParametrization iptp;
       
       
-  if(foundIK)
-  {
+ // if(foundIK)
+ // {
+      
+      geometry_msgs::Pose target_pose3;
+      
+      target_pose3 = current_moveit_group_->getCurrentPose().pose;
+      waypoints.push_back(target_pose3);
+      target_pose3.position.z -= 0.1;
+      waypoints.push_back(target_pose3);
+     target_pose3.position.z += 0.12;
+      waypoints.push_back(target_pose3);
+     
       
       
-      waypoints.push_back(req.target_poses[1]);
       
-      bool found = false;
-      foundIK = checkWayPointReachability(req.target_poses[2]);
+     // waypoints.push_back(req.target_poses[1]);
       
-      if(found)
-        waypoints.push_back(req.target_poses[2]);
+      //bool found = false;
+      //foundIK = checkWayPointReachability(req.target_poses[2]);
+      
+      //if(found)
+       // waypoints.push_back(req.target_poses[2]);
       
       
       //Plan cartesian path
@@ -780,8 +798,10 @@ bool MotionExecutor::planExecuteFineMotion(lenny_msgs::PlanExecuteFineMotion::Re
       ROS_INFO_STREAM("Pose reference frame: " << current_moveit_group_->getPoseReferenceFrame());
       
       /// CReate an iterativeParabolicTimeParametrization object
-      //bool success = iptp.computeTimeStamps(rt);
-      //ROS_INFO("Computed time stamps %s ", success? "SUCCEDED":"FAILED");
+      trajectory_processing::IterativeParabolicTimeParameterization iptp;
+      
+      bool success = iptp.computeTimeStamps(rt);
+      ROS_INFO("Computed time stamps %s ", success? "SUCCEDED":"FAILED");
       
       
       
@@ -791,9 +811,10 @@ bool MotionExecutor::planExecuteFineMotion(lenny_msgs::PlanExecuteFineMotion::Re
       plan.trajectory_= trajectory;
       ROS_INFO("Visualizing plan (cartesian path) (%.2f%% achieved", fraction *100);
       
-      
+       ros::Duration(1.5).sleep();
+       
       current_moveit_group_->execute(plan);
-      kinematic_state_ = current_moveit_group_->getCurrentState();
+      
       
       bool stop;
       stop = motion_utilities_.waitForRobotToStop();
@@ -809,13 +830,13 @@ bool MotionExecutor::planExecuteFineMotion(lenny_msgs::PlanExecuteFineMotion::Re
      
       }
       
-  }
+/*  }
   else
   {
     res.success = false;
     return false;
   }
-
+*/
   
   	
 

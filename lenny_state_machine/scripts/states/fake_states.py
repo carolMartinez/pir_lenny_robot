@@ -303,17 +303,19 @@ class PlanExecuteFineMove(smach.State):
 
     req = PlanExecuteFineMotionRequest()
 
-    ***************** Se queda ac{a
+   
     
-    req.target_poses[0].position = userdata.robot_movements_input_grasp.position
-    req.target_poses[0].orientation = userdata.robot_movements_input_grasp.orientation
+    req.target_poses.append(userdata.robot_movements_input_grasp)
+    req.target_poses.append(userdata.robot_movements_input_retreat)
     
-    req.target_poses[1].position = userdata.robot_movements_input_retreat.position
-    req.target_poses[1].orientation = userdata.robot_movements_input_retreat.orientation
+    #req.target_poses.orientation = userdata.robot_movements_input_grasp.orientation
+    
+    #req.target_poses[1].position = userdata.robot_movements_input_retreat.position
+    #req.target_poses[1].orientation = userdata.robot_movements_input_retreat.orientation
     
     req.move_group = "arm_right"
     
-    resp = plan_execute_fine_motion(req)
+    resp = plan_execute_fine_move(req)
 
     rospy.loginfo('PLAN EXECUTE FINE MOTION')
 
