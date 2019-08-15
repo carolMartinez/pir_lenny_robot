@@ -399,15 +399,21 @@ bool MotionExecutor::moveToHome(lenny_msgs::MoveToHome::Request & req, lenny_msg
 
 bool MotionExecutor::checkWayPointReachability(const geometry_msgs::Pose& waypoint) 
 {
-  bool found_ik = kinematic_state_->setFromIK(joint_model_group_, waypoint, 3, 0.005);
+  
+  //Solve IK, attemps 10, timeout for each attempt 0.1 s
+  bool found_ik = kinematic_state_->setFromIK(joint_model_group_, waypoint, 10, 0.1);
+  
   if(found_ik)
   {
-    ROS_DEBUG_STREAM("Found IK " );
+    ROS_INFO_STREAM("Found IK " );
+    return true;
+    
 
   }
   else
   {
-    ROS_INFO("Did not find IK solution");
+    ROS_ERROR_STREAM("Did not find IK solution");
+    return false;
   }
   
 }
@@ -453,7 +459,7 @@ bool MotionExecutor::createPickMovements(lenny_msgs::CreatePickMovements::Reques
 
  
  // creating end pose by applying a translation along +z by retreat distance
-  tf::poseTFToMsg(Transform(Quaternion::getIdentity(),Vector3(0,0,0.3))*world_to_tcp_tf,end_pose);
+  tf::poseTFToMsg(Transform(Quaternion::getIdentity(),Vector3(0,0,0.2))*world_to_tcp_tf,end_pose);
   
   ///TODO: do something if waypoint is not reachable   
   poses.clear();
@@ -615,14 +621,11 @@ bool MotionExecutor::planCoarseMotion(lenny_msgs::PlanCoarseMotion::Request & re
 
 
   //Check reachability
-  //bool foundIK = false;
-  //foundIK = checkWayPointReachability(target_pose);
+  bool foundIK = false;
+  foundIK = checkWayPointReachability(target_pose);
   
-  //if(foundIK)
-  //{ 
-  
-
-
+  if(foundIK)
+  { 
     
       p.pose = target_pose;
       moveit_msgs::Constraints pose_goal = kinematic_constraints::constructGoalConstraints("arm_rigth_link_7_t",p,0.01,
@@ -688,14 +691,14 @@ bool MotionExecutor::planCoarseMotion(lenny_msgs::PlanCoarseMotion::Request & re
         
         
       }
-  //}
-  //else
- // {
-  //  ROS_ERROR("No IK solution found for point Coarse Point");
-  //  res.success = false;
-  //  return false;
+  }
+  else
+  {
+    ROS_ERROR("No IK solution found for point Coarse Point");
+    res.success = false;
+    return false;
     
-  //}
+  }
        
   
 
@@ -721,7 +724,7 @@ bool MotionExecutor::planExecuteFineMotion(lenny_msgs::PlanExecuteFineMotion::Re
 	const robot_state::JointModelGroup *joint_model_group = current_moveit_group_->getCurrentState()->getJointModelGroup(req.move_group);
 	// constructing motion plan goal constraints
 	current_moveit_group_->setStartState(*current_moveit_group_->getCurrentState());
-/// kinematic_state_: it is the current kinematic configuration of the robot
+  /// kinematic_state_: it is the current kinematic configuration of the robot
   kinematic_state_ = moveit::core::RobotStatePtr(current_moveit_group_->getCurrentState());
   //kinematic_state_->setToDefaultValues();
  
@@ -739,7 +742,6 @@ bool MotionExecutor::planExecuteFineMotion(lenny_msgs::PlanExecuteFineMotion::Re
 
   moveit::planning_interface::MoveGroupInterface::Plan plan;
   
-  
   moveit_msgs::RobotTrajectory trajectory;
   
   
@@ -753,41 +755,19 @@ bool MotionExecutor::planExecuteFineMotion(lenny_msgs::PlanExecuteFineMotion::Re
   double cart_jump_thr = 0.0; // meters 
   
   
-   //Check reachability
-  bool foundIK= false;
-  foundIK = checkWayPointReachability(req.target_poses[1]);
-  
+  //Defining poses
   std::vector<geometry_msgs::Pose> waypoints;
-  double fraction;
-  /// CReate an iterativeParabolicTimeParametrization object
-  //trajectory_processsing::IterativeParabolicTimeParametrization iptp;
-      
-      
- // if(foundIK)
- // {
-      
-      geometry_msgs::Pose target_pose3;
-      
-      target_pose3 = current_moveit_group_->getCurrentPose().pose;
-      waypoints.push_back(target_pose3);
-      target_pose3.position.z -= 0.1;
-      waypoints.push_back(target_pose3);
-     target_pose3.position.z += 0.12;
-      waypoints.push_back(target_pose3);
-     
-      
-      
-      
-     // waypoints.push_back(req.target_poses[1]);
-      
-      //bool found = false;
-      //foundIK = checkWayPointReachability(req.target_poses[2]);
-      
-      //if(found)
-       // waypoints.push_back(req.target_poses[2]);
-      
-      
+        
+  //Check reachability
+  bool foundIK= false;
+  foundIK = checkWayPointReachability(req.target_poses[0]);
+ 
+  if(foundIK)
+  {
+      waypoints.push_back(req.target_poses[0]);
+   
       //Plan cartesian path
+      double fraction;
       fraction = current_moveit_group_->computeCartesianPath(waypoints,
       cart_step_size,cart_jump_thr,trajectory,avoid_collision);
       
@@ -804,14 +784,12 @@ bool MotionExecutor::planExecuteFineMotion(lenny_msgs::PlanExecuteFineMotion::Re
       ROS_INFO("Computed time stamps %s ", success? "SUCCEDED":"FAILED");
       
       
-      
       //Get robot trajectory msg
       rt.getRobotTrajectoryMsg(trajectory);
       //Plan the trajectory
       plan.trajectory_= trajectory;
       ROS_INFO("Visualizing plan (cartesian path) (%.2f%% achieved", fraction *100);
       
-       ros::Duration(1.5).sleep();
        
       current_moveit_group_->execute(plan);
       
@@ -830,13 +808,13 @@ bool MotionExecutor::planExecuteFineMotion(lenny_msgs::PlanExecuteFineMotion::Re
      
       }
       
-/*  }
+  }
   else
   {
     res.success = false;
     return false;
   }
-*/
+
   
   	
 

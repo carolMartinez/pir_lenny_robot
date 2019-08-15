@@ -1,6 +1,7 @@
 import rospy
 import roslib
 import smach
+import time
 import moveit_commander
 import tf2_ros
 
@@ -296,31 +297,59 @@ class PlanExecuteFineMove(smach.State):
   def execute(self, userdata):
     
     
-    rospy.wait_for_service('/motion_executor/plan_execute_fine_motion')
+    #Variable to track errors during the different FINE movements
+    error=0
     
+    ##-------------------
+    ##APPROACH OBJECT
+    rospy.wait_for_service('/motion_executor/plan_execute_fine_motion')
     plan_execute_fine_move = rospy.ServiceProxy('/motion_executor/plan_execute_fine_motion',PlanExecuteFineMotion)
 
 
+    #Creating the request to approach object
     req = PlanExecuteFineMotionRequest()
-
-   
-    
     req.target_poses.append(userdata.robot_movements_input_grasp)
-    req.target_poses.append(userdata.robot_movements_input_retreat)
-    
-    #req.target_poses.orientation = userdata.robot_movements_input_grasp.orientation
-    
-    #req.target_poses[1].position = userdata.robot_movements_input_retreat.position
-    #req.target_poses[1].orientation = userdata.robot_movements_input_retreat.orientation
-    
     req.move_group = "arm_right"
-    
     resp = plan_execute_fine_move(req)
-
-    rospy.loginfo('PLAN EXECUTE FINE MOTION')
-
     
     if(resp.success):
+      rospy.loginfo('FINE MOTION APPROACH OBJECT')
+      ##-------------------
+      ##GRASP THE OBJECT
+      
+      rospy.loginfo('CLOSE GRIPPER AND ATTACH OBJECT')
+      ##add here function
+      time.sleep(2)
+    
+      ##-------------------
+      ##RETREAT WITH OBJECT IN HAND
+
+      rospy.wait_for_service('/motion_executor/plan_execute_fine_motion')
+      plan_execute_fine_move = rospy.ServiceProxy('/motion_executor/plan_execute_fine_motion',PlanExecuteFineMotion)
+
+
+      #Creating the request to approach object
+      req2 = PlanExecuteFineMotionRequest()
+      req2.target_poses.append(userdata.robot_movements_input_retreat)
+      req2.move_group = "arm_right"
+      resp = plan_execute_fine_move(req2)
+    
+      if(resp.success):
+        rospy.loginfo('FINE MOTION RETREAT WITH OBJECT')
+      else:
+        rospy.loginfo('ERROR ---> FINE MOTION RETREAT WITH OBJECT')
+        error=1; 
+      
+      
+      
+    else:
+      rospy.loginfo('ERROR   ---> FINE MOTION APPROACH OBJECT')
+      error=1; 
+
+    
+    
+    
+    if(error==0):
       return 'success'
     else:
       return 'error' 

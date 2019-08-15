@@ -54,16 +54,16 @@ def makePickToolSM():
 		smach.StateMachine.add(
 				'MOVE_COARSE',ExecuteCoarseMove(),
 				transitions = {
-					'success':'PLAN_EXECUTE_FINE',
+					'success':'PICK_TOOL',
 					'error':'error'},
 				remapping = {'coarse_trajectory_input' : 'sm_trajectory'} 
 		)
     
 				
 		smach.StateMachine.add(
-				'PLAN_EXECUTE_FINE',PlanExecuteFineMove(),
+				'PICK_TOOL',PlanExecuteFineMove(),
 				transitions = {
-					'success':'MOVE_FINE',
+					'success':'success',
 					'error':'error'},
           remapping = {'robot_movements_input_preGrasp' : 'sm_user_pose_preGrasp',
 			  'robot_movements_input_grasp' : 'sm_user_pose_grasp',
@@ -71,11 +71,11 @@ def makePickToolSM():
 			  } 
 		)
 		## TODO: change for makePlaceToolSM
-		smach.StateMachine.add(
-				'MOVE_FINE',MoveFineMotion(),
-				transitions = {
-					'success':'success',
-					'error':'error'}
-		)
+		#smach.StateMachine.add(
+		#		'MOVE_FINE',MoveFineMotion(),
+		#		transitions = {
+		#			'success':'success',
+		#			'error':'error'}
+		#)
 
 	return sm
