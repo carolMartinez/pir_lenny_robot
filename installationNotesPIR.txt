@@ -1,0 +1,7 @@
+when compiling pir_vision_system comment in the package xml the following
+	<!--<exec_depend>pir_vision_cameras</exec_depend> -->
+	<!--<exec_depend>pir_vision_bottle_detection</exec_depend> -->
+
+Para pir_vision
+TODO: path relativos en el launch... 
+

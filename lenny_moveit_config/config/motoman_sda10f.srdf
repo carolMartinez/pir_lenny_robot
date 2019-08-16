@@ -272,7 +272,7 @@
         <joint name="arm_right_joint_5_r" value="-0.785125" />
         <joint name="arm_right_joint_6_b" value="-1.91492" />
         <joint name="arm_right_joint_7_t" value="-0.0815717" />
-        <joint name="torso_joint_b1" value="1.9188" />
+        <joint name="torso_joint_b1" value="0" />
         <joint name="torso_joint_b2" value="0" />
     </group_state>
     <group_state name="HOME_TOOL_2" group="torso">

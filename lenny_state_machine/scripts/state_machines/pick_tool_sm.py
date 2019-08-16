@@ -4,6 +4,8 @@ import smach
 
 
 from states.fake_states import *
+from states.motion_states import *
+
 from trajectory_msgs.msg import JointTrajectory
         
         
@@ -21,13 +23,6 @@ def makePickToolSM():
 	
 	with sm:
 		
-		# Move robot to home position.
-#		smach.StateMachine.add(
-#				'DETECT TOOL', DetectTool(),
-#				transitions = {
-#				'success':'PLAN_COARSE',
-#				'error':'error'}
-#		)
           
 		smach.StateMachine.add(
 				'CREATE_PICK_MOVES',CreatePickMoves(),
@@ -70,12 +65,7 @@ def makePickToolSM():
 			  'robot_movements_input_retreat' : 'sm_user_pose_retreat'
 			  } 
 		)
-		## TODO: change for makePlaceToolSM
-		#smach.StateMachine.add(
-		#		'MOVE_FINE',MoveFineMotion(),
-		#		transitions = {
-		#			'success':'success',
-		#			'error':'error'}
-		#)
+		
+    
 
 	return sm

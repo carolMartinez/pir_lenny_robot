@@ -33,7 +33,7 @@ MotionExecutor::MotionExecutor() :
 	execute_stitched_motion_    = node_handle_.advertiseService("execute_stitched_motion", &MotionExecutor::executeStitchedMotion, this);
 	execute_calibration_motion_ = node_handle_.advertiseService("execute_calibration_motion", &MotionExecutor::executeCalibrationMotion, this);*/
 	
-	move_to_home_               = node_handle_.advertiseService("move_to_home", &MotionExecutor::moveToHome, this);
+	move_to_pose_               = node_handle_.advertiseService("move_to_pose", &MotionExecutor::moveToPose, this);
 
   create_pick_movements_          = node_handle_.advertiseService("create_pick_movements", &MotionExecutor::createPickMovements, this);
   
@@ -336,7 +336,7 @@ bool MotionExecutor::executeCalibrationMotion(apc16delft_msgs::ExecuteCalibratio
 
 */
 
-bool MotionExecutor::moveToHome(lenny_msgs::MoveToHome::Request & req, lenny_msgs::MoveToHome::Response & res)
+bool MotionExecutor::moveToPose(lenny_msgs::MoveToPose::Request & req, lenny_msgs::MoveToPose::Response & res)
 {
 	
 	moveit::planning_interface::MoveGroupInterface group(req.move_group);
@@ -558,8 +558,9 @@ bool MotionExecutor::executeCoarseMotion(lenny_msgs::ExecuteCoarseMotion::Reques
 
     current_moveit_group_->setPlanningTime(10);
     current_moveit_group_->setGoalTolerance(0.01);
-    current_moveit_group_->setGoalOrientationTolerance(0.01);
-    current_moveit_group_->setGoalPositionTolerance(0.01);
+    ///TODO: check if it is required to specify both tolerances
+    //current_moveit_group_->setGoalOrientationTolerance(0.01);
+    //current_moveit_group_->setGoalPositionTolerance(0.01);
     current_moveit_group_->setMaxVelocityScalingFactor(0.5);
     current_moveit_group_->setPlannerId("RRTkConfigDefault");
     current_moveit_group_->setNumPlanningAttempts(5);
@@ -568,7 +569,9 @@ bool MotionExecutor::executeCoarseMotion(lenny_msgs::ExecuteCoarseMotion::Reques
        
    	current_moveit_group_->execute(my_plan);
    	bool stop;
-	stop = motion_utilities_.waitForRobotToStop();
+	
+  
+  stop = motion_utilities_.waitForRobotToStop();
 	if(!stop)
 	{
 	  res.success = false;
@@ -694,7 +697,7 @@ bool MotionExecutor::planCoarseMotion(lenny_msgs::PlanCoarseMotion::Request & re
   }
   else
   {
-    ROS_ERROR("No IK solution found for point Coarse Point");
+    ROS_ERROR("No IK solution found for Coarse Point");
     res.success = false;
     return false;
     

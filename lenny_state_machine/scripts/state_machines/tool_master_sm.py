@@ -3,35 +3,30 @@ import roslib
 import smach
 
 
-from states.fake_states import MoveRobotHome
-from states.fake_states import MoveHomePickTools
-from states.fake_states import MoveHomePickBottles
-
-
+from states.motion_states import MoveRobotHome
+from states.pick_bottle_states import MoveHomePickBottles
 from states.fake_states import WaitFake
-from states.fake_states import InitializeToolMasterSM
-from states.pick_tool_sm import makePickToolSM
+from states.pick_tool_states import MoveHomePickTools
+from states.pick_tool_states import InitializeToolMasterSM
+from state_machines.pick_tool_sm import makePickToolSM
      
         
 def makeToolMasterSM():
   
     
-    #rospy.init_node('tool_master_sm')
-
 	sm = smach.StateMachine(outcomes=['success','error'])
 	
 	with sm:
 		
 		
-		
-		# Move robot to home position.
-#		smach.StateMachine.add(
-#				'MOVE_HOME_PICK_TOOLS',MoveHomePickTools(),
-#				transitions = {
-#					'pick':'PICK_TOOL_SM',
-#					'place':'PICK_TOOL_SM',
-#					'error':'error'}
-#		)
+
+		smach.StateMachine.add(
+				'MOVE_HOME_PICK_TOOLS',MoveHomePickTools(),
+				transitions = {
+					'pick':'PICK_TOOL_SM',
+					'place':'PICK_TOOL_SM',
+					'error':'error'}
+		)
 		
 		smach.StateMachine.add(
 				'PICK_TOOL_SM',makePickToolSM(),

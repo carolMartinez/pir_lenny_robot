@@ -3,9 +3,7 @@ import roslib
 import smach
 
 
-from states.fake_states import MoveRobotHome
-from states.fake_states import WaitFake
-from states.tool_master_sm import makeToolMasterSM
+from states.motion_states import *
 from lenny_msgs.srv import *
 from smach_ros import ServiceState
         
@@ -67,11 +65,10 @@ def makeInitMasterSM():
 		#			'aborted':'aborted',
 		#			'preempted':'aborted'}
 		#)
-
-		smach.StateMachine.add('MOVE_HOME',ServiceState('/motion_executor/move_to_home',MoveToHome,request=req),transitions = {
-					'succeeded':'succeeded',
-					'aborted':'aborted',
-					'preempted':'aborted'}
+		smach.StateMachine.add('MOVE_HOME_INIT',MoveRobotHome(),
+				transitions = {
+					'done':'succeeded',
+					'error':'aborted'}
 		)
 
 

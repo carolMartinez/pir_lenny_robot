@@ -60,7 +60,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 ## Generate services in the 'srv' folder
  add_service_files(DIRECTORY srv FILES
-   MoveToHome.srv
+   MoveToPose.srv
    CreatePickMovements.srv
    PlanExecuteFineMotion.srv
    ExecuteCoarseMotion.srv
