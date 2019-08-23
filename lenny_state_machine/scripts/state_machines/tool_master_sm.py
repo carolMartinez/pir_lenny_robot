@@ -9,6 +9,8 @@ from states.fake_states import WaitFake
 from states.pick_tool_states import MoveHomePickTools
 from states.pick_tool_states import InitializeToolMasterSM
 from state_machines.pick_tool_sm import makePickToolSM
+from state_machines.place_tool_sm import makePlaceToolSM
+
      
         
 def makeToolMasterSM():
@@ -18,8 +20,6 @@ def makeToolMasterSM():
 	
 	with sm:
 		
-		
-
 		smach.StateMachine.add(
 				'MOVE_HOME_PICK_TOOLS',MoveHomePickTools(),
 				transitions = {
@@ -38,19 +38,18 @@ def makeToolMasterSM():
 		smach.StateMachine.add(
 				'MOVE_HOME_PICK_BOTTLES',MoveHomePickBottles(),
 				transitions = {
-					'success':'success',
+					'success':'PLACE_TOOL_SM',
 					'error':'error'}
 		)
-		## TODO: change for makePlaceToolSM
-		#smach.StateMachine.add(
-		#		'PLACE_TOOL_SM',makePickToolSM(),
-		#		transitions = {
-		#			'success':'FAKE_STATE',
-		#			'error':'error'}
-		#)
-	
-	#outcome = sm_root.execute()
-
+		
+		smach.StateMachine.add(
+				'PLACE_TOOL_SM',makePlaceToolSM(),
+				transitions = {
+					'success':'PLACE_TOOL_SM',
+					'error':'error'}
+		)
+		
+		
 	return sm
     
     #if (outcome == 'error'):

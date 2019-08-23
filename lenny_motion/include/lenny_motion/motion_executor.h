@@ -17,6 +17,8 @@
 
 
 #include <tf/transform_listener.h>
+#include <tf/transform_broadcaster.h>
+
 //#include <tf2_ros/transform_listener.h>
 //#include "tf2/transform_datatypes.h"
 //#include <tf2/impl/convert.h>
@@ -36,6 +38,8 @@
 #include <lenny_msgs/ExecuteCoarseMotion.h>
 #include <lenny_msgs/PlanCoarseMotion.h>
 #include <lenny_msgs/PlanExecuteFineMotion.h>
+#include <lenny_msgs/ExtendTCP.h>
+#include <lenny_msgs/RestoreTCP.h>
 
 
 /*
@@ -83,6 +87,8 @@ private:
 	ros::ServiceServer plan_coarse_motion_;
   ros::ServiceServer execute_fine_motion_;
 	ros::ServiceServer plan_execute_fine_motion_;
+  ros::ServiceServer extendTCP_; 
+  ros::ServiceServer restoreTCP_; 
   
   
 	/*
@@ -114,9 +120,11 @@ private:
   ros::ServiceClient motion_plan_client;
   
   
-  bool checkWayPointReachability(const geometry_msgs::Pose& waypoint); 
+  bool checkWayPointReachability(const geometry_msgs::Pose& waypoint);
+  tf::StampedTransform tcp_to_wrist_tf_right_;
+   tf::StampedTransform tcp_to_wrist_tf_;  
   
-  
+  tf::StampedTransform tcp_to_wrist_tf_left_; 
 
 protected:
 	/*bool executeCoarseMotion(apc16delft_msgs::ExecuteCoarseMotion::Request & req, apc16delft_msgs::ExecuteCoarseMotion::Response & res);
@@ -135,7 +143,10 @@ protected:
   //bool planFineMotion(lenny_msgs::PlanFineMotion::Request & req, lenny_msgs::PlanFineMotion::Response & res);
 	
 	bool planExecuteFineMotion(lenny_msgs::PlanExecuteFineMotion::Request & req, lenny_msgs::PlanExecuteFineMotion::Response & res);
-	
+
+	bool extendTCP(lenny_msgs::ExtendTCP::Request & req, lenny_msgs::ExtendTCP::Response & res); 
+  bool restoreTCP(lenny_msgs::RestoreTCP::Request & req, lenny_msgs::RestoreTCP::Response & res); 
+
 	/*
 	bool moveToCalibrateShelf(apc16delft_msgs::MoveToCalibrateShelf::Request &, apc16delft_msgs::MoveToCalibrateShelf::Response & res);
 	bool moveToCalibrateTote(apc16delft_msgs::MoveToCalibrateTote::Request &, apc16delft_msgs::MoveToCalibrateTote::Response & res);

@@ -426,7 +426,7 @@ Visualization Manager:
         Interactive Marker Size: 0
         Joint Violation Color: 255; 0; 255
         Planning Group: sda10f
-        Query Goal State: true
+        Query Goal State: false
         Query Start State: false
         Show Workspace: false
         Start State Alpha: 1
@@ -885,8 +885,6 @@ Visualization Manager:
           Value: false
         kinect2:
           Value: false
-        object_link:
-          Value: true
         palm:
           Value: false
         real_sense_base_camera_link:
@@ -964,8 +962,6 @@ Visualization Manager:
           feeder_table:
             feeder_table_2:
               {}
-          object_link:
-            {}
           torso_link_b1:
             arm_left_link_1_s:
               arm_left_link_2_l:
@@ -1066,10 +1062,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 0.319797546
+      Pitch: 0.204797596
       Target Frame: base_link
       Value: XYOrbit (rviz)
-      Yaw: 5.56496668
+      Yaw: 1.7167809
     Saved: ~
 Window Geometry:
   Displays:

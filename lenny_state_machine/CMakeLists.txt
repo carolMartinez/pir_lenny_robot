@@ -6,6 +6,7 @@ project(lenny_state_machine)
 
 find_package(catkin REQUIRED COMPONENTS
   rospy
+  pir_vision_msgs
 )
 
 catkin_package()

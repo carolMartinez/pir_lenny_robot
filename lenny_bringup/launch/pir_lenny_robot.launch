@@ -24,6 +24,7 @@
     <include file="$(find lenny_moveit_config)/launch/moveit_planning_execution.launch"/>
   </group> 
   
+  
    <!-- Start the motion executor. -->
 	<node name="motion_executor" pkg="lenny_motion" type="motion_executor" output="screen" />
 

@@ -44,6 +44,10 @@ MotionExecutor::MotionExecutor() :
 
   plan_execute_fine_motion_          = node_handle_.advertiseService("plan_execute_fine_motion", &MotionExecutor::planExecuteFineMotion, this);
 
+  extendTCP_               = node_handle_.advertiseService("extendTCP", &MotionExecutor::extendTCP, this);
+
+  restoreTCP_               = node_handle_.advertiseService("restoreTCP", &MotionExecutor::restoreTCP, this);
+
   //plan_fine_motion_          = node_handle_.advertiseService("plan_fine_motion", &MotionExecutor::planFineMotion, this);
 
   //Motion plan client
@@ -59,6 +63,27 @@ MotionExecutor::MotionExecutor() :
 	// Fill cache with all yaml files from directory.
 	//current_moveit_group_->setMaxVelocityScalingFactor(trajectory_velocity_scaling_);
 	rs_ = current_moveit_group_->getCurrentState();
+  
+  
+  //Initialize transformation from tcp to wrist
+  tf::TransformListener listener;
+  
+  //TODO: we need to have one tcp_to_wrist_tf per arm
+  try
+  {
+    ///TODO: this is a fixed transformation, this has to be generic too
+	  listener.waitForTransform("arm_right_tcp_link", "arm_right_link_7_t",ros::Time::now(),ros::Duration(3.0f));
+    listener.lookupTransform("arm_right_tcp_link", "arm_right_link_7_t", ros::Time(0), tcp_to_wrist_tf_right_);
+    tcp_to_wrist_tf_=tcp_to_wrist_tf_right_;
+
+  }
+  catch (tf::TransformException &ex) 
+  {
+    ROS_WARN("%s",ex.what());
+    ros::Duration(1.0).sleep();
+  }
+
+  
 }
 
 /*
@@ -454,7 +479,11 @@ bool MotionExecutor::createPickMovements(lenny_msgs::CreatePickMovements::Reques
  
   // converting target pose
   tf::poseTFToMsg(world_to_tcp_tf,target_pose);
-   
+  
+  
+  //TODO: do this based on the group.. that has to be passed as parameter
+  tf::StampedTransform tcp_to_wrist_tf; 
+  tcp_to_wrist_tf=tcp_to_wrist_tf_right_; 
   
 
  
@@ -470,36 +499,7 @@ bool MotionExecutor::createPickMovements(lenny_msgs::CreatePickMovements::Reques
   //Convert poses to wrist
   //Tf listener
   //I need the trasnformation between wrist and tcp this is fixed
-	tf::TransformListener listener;
-   
-  //tf2_ros::Buffer tfBuffer;
-  //tf2_ros::TransformListener tfListener(tfBuffer);
-
-	tf::StampedTransform tcp_to_wrist_tf;
 	
-  
-  
-  try
-  {
-	 
-	  listener.waitForTransform("arm_right_tcp_link", "arm_right_link_7_t",ros::Time::now(),ros::Duration(3.0f));
-    listener.lookupTransform("arm_right_tcp_link", "arm_right_link_7_t", ros::Time(0), tcp_to_wrist_tf);
-
-	
-    //tcp_to_wrist_tf_stamped = tfBuffer.lookupTransform("arm_right_tcp_link", "arm_right_link_7_t",ros::Time(0),ros::Duration(3.0));
-
-	//tcp_to_wrist_tf.rotation=tcp_to_wrist_tf_stamped.transform.rotation;
-	//tcp_to_wrist_tf.translation=tcp_to_wrist_tf_stamped.transform.translation;
-	
-  }
-  catch (tf::TransformException &ex) 
-  {
-    ROS_WARN("%s",ex.what());
-    ros::Duration(1.0).sleep();
-    res.success = false;
-    return false;
-  }
-
 	std::vector<geometry_msgs::Pose> wrist_poses;
 	wrist_poses.resize(poses.size());
 
@@ -627,8 +627,8 @@ bool MotionExecutor::planCoarseMotion(lenny_msgs::PlanCoarseMotion::Request & re
   bool foundIK = false;
   foundIK = checkWayPointReachability(target_pose);
   
-  if(foundIK)
-  { 
+  //if(foundIK)
+  //{ 
     
       p.pose = target_pose;
       moveit_msgs::Constraints pose_goal = kinematic_constraints::constructGoalConstraints("arm_rigth_link_7_t",p,0.01,
@@ -694,14 +694,14 @@ bool MotionExecutor::planCoarseMotion(lenny_msgs::PlanCoarseMotion::Request & re
         
         
       }
-  }
-  else
-  {
-    ROS_ERROR("No IK solution found for Coarse Point");
-    res.success = false;
-    return false;
+  //}
+  //else
+  //{
+  //  ROS_ERROR("No IK solution found for Coarse Point");
+  //  res.success = false;
+  //  return false;
     
-  }
+  //}
        
   
 
@@ -825,6 +825,51 @@ bool MotionExecutor::planExecuteFineMotion(lenny_msgs::PlanExecuteFineMotion::Re
 
 
 
+bool MotionExecutor::extendTCP(lenny_msgs::ExtendTCP::Request & req, lenny_msgs::ExtendTCP::Response & res) 
+{
+  ROS_DEBUG_STREAM("Received request to EXTEND TCP" );
+
+  ///TODO: do it for the other groups and change the move_home_fuction too
+  if(req.arm_name=="arm_right")
+  {
+    tcp_to_wrist_tf_right_.setOrigin(tf::Vector3(tcp_to_wrist_tf_right_.getOrigin().getX(),tcp_to_wrist_tf_right_.getOrigin().getX(),tcp_to_wrist_tf_right_.getOrigin().getX()-0.1));
+    tcp_to_wrist_tf_right_.setRotation(tcp_to_wrist_tf_.getRotation());
+  }
+ 
+  static tf::TransformBroadcaster br;
+  br.sendTransform(tf::StampedTransform(tcp_to_wrist_tf_right_, ros::Time::now(), "world", "newTCP"));
+
+  res.success = true;
+  return true;
+  
+  //if(arm_name=="arm_left")
+  //  tcp_to_wrist_tf_left_.setOrigin(tf::Vector3(tcp_to_wrist_tf_left_.getOrigin().getX(),tcp_to_wrist_tf_left_.getOrigin().getX(),tcp_to_wrist_tf_left_.getOrigin().getX()-0.1));
+  
+}
+           
+
+
+bool MotionExecutor::restoreTCP(lenny_msgs::RestoreTCP::Request & req, lenny_msgs::RestoreTCP::Response & res) 
+{
+  ROS_DEBUG_STREAM("Received request to RESTORE TCP" );
+
+  ///TODO: do it for the other groups and change the move_home_fuction too
+  if(req.arm_name=="arm_right")
+  {
+    tcp_to_wrist_tf_right_.setOrigin(tf::Vector3(tcp_to_wrist_tf_right_.getOrigin().getX(),tcp_to_wrist_tf_right_.getOrigin().getX(),tcp_to_wrist_tf_right_.getOrigin().getX()+0.1));
+    tcp_to_wrist_tf_right_.setRotation(tcp_to_wrist_tf_.getRotation());
+  }
+ 
+  static tf::TransformBroadcaster br;
+  br.sendTransform(tf::StampedTransform(tcp_to_wrist_tf_right_, ros::Time::now(), "world", "newTCP"));
+
+  res.success = true;
+  return true;
+  
+  //if(arm_name=="arm_left")
+  //  tcp_to_wrist_tf_left_.setOrigin(tf::Vector3(tcp_to_wrist_tf_left_.getOrigin().getX(),tcp_to_wrist_tf_left_.getOrigin().getX(),tcp_to_wrist_tf_left_.getOrigin().getX()-0.1));
+  
+}
 
 
 

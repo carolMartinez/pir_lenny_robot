@@ -5,3 +5,15 @@ when compiling pir_vision_system comment in the package xml the following
 Para pir_vision
 TODO: path relativos en el launch... 
 
+Wilson:
+
+Es successful no successfull 
+No crear service 1 service 2 service 3 etc....                                                                                                                                                                                                         
+
+
+Por qu{e cuando se corre el pir_vision se corren unos clientes???
+No se deber{ia
+
+Cambiar conversi{on de rpy a quaternio tomar el valor w tambien
+
+attach cambiar nombre del servicio de attached a attach

@@ -59,6 +59,9 @@
   <exec_depend>lenny_msgs</exec_depend>
   <exec_depend>lenny_test</exec_depend>
   
+  <exec_depend>pir_vision_bringup</exec_depend>
+  <exec_depend>pir_vision_msgs</exec_depend>
+  
   
     <exec_depend>put_objects_rviz</exec_depend>
     <exec_depend>vision</exec_depend>

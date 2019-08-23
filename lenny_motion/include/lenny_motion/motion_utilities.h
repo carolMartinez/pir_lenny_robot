@@ -117,7 +117,8 @@ class MotionUtilities
               
               return sqrt(distance);
           }
-           
+          
+          
 	
 };
 

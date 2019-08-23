@@ -3,17 +3,28 @@
 
 <!-- start moveit and robot -->
 
-  <arg name="fake_vision" default="false"/>
+  <arg name="fake_vision" default="true"/>
   <arg name="fake_gripper" default="false"/>
   <arg name="fake_pose_estimator" default="false"/>
   <arg name="fake_bin_estimator" default="false"/>
   <arg name="fake_tool_estimator" default="false"/>
   <arg name="fake_robot" default="true"/>
   
- 
+  <!-- RUN Vision System 
+  
+  <group if ="$(arg fake_vision)" >
+     <include file="$(find pir_vision_bringup)/launch/pir_vision_bringup.launch">
+     <arg name="pir_vision_fake" value="true"/> 
+     </include>
+  </group> 
+  -->
+  
   
   <!-- RUN STATE MACHINE -->
   <include file="$(find lenny_state_machine)/launch/test_pick_and_place.launch"/>
+  
+  
+  
   
   <!-- Start the motion executor. -->
 	<!-- <node name="motion_executor" pkg="lenny_motion" type="motion_executor" output="screen" /> -->

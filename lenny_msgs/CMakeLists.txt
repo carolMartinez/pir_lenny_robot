@@ -65,9 +65,8 @@ find_package(catkin REQUIRED COMPONENTS
    PlanExecuteFineMotion.srv
    ExecuteCoarseMotion.srv
    PlanCoarseMotion.srv
-  # PlanFineMotion.srv
-   
-   
+   ExtendTCP.srv
+   RestoreTCP.srv
  )
 
 ## Generate actions in the 'action' folder

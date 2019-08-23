@@ -1,0 +1,5 @@
+#Extend tcp to compensate for new tool
+string arm_name
+float32 distance
+---
+bool success

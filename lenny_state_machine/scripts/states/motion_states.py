@@ -10,7 +10,7 @@ import moveit_commander
 import tf2_ros
 
 from lenny_msgs.srv import *
-
+from pir_vision_msgs.srv import *
 
 
 
@@ -51,11 +51,13 @@ class MoveRobotHome(smach.State):
     if self.preempt_requested():
       self.service_preempt()
       return 'error'
+    else:
+      return 'success' 
     
 
 class CreatePickMoves(smach.State):
   def __init__(self):
-    smach.State.__init__(self, outcomes=['success','error'],
+    smach.State.__init__(self, outcomes=['success','error'], input_keys=['object_pose_input'],
     output_keys=['robot_movements_output_approach', 'robot_movements_output_preGrasp',
     'robot_movements_output_grasp','robot_movements_output_retreat'])
     
@@ -66,27 +68,28 @@ class CreatePickMoves(smach.State):
     
     rospy.wait_for_service('/motion_executor/create_pick_movements')
     
-    
-    create_pick_movements = rospy.ServiceProxy('/motion_executor/create_pick_movements', CreatePickMovements)
-
-    tfBuffer = tf2_ros.Buffer()
-    listener = tf2_ros.TransformListener(tfBuffer)
-
-    trans = geometry_msgs.msg.Transform()
-    
     try:
-       trans = tfBuffer.lookup_transform('torso_base_link', 'object_link', rospy.Time(), rospy.Duration(3.0))
-    except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
-       rospy.loginfo('tf Transformation not available')
-       error = 1
+      create_pick_movements = rospy.ServiceProxy('/motion_executor/create_pick_movements', CreatePickMovements)
 
-    if (error==0):
-      pose = geometry_msgs.msg.Pose()
-      translation = trans.transform.translation
-      rotation =  trans.transform.rotation
-      pose.position = geometry_msgs.msg.Point(translation.x,translation.y,translation.z)
-      pose.orientation = rotation
-      print(pose)     
+      #tfBuffer = tf2_ros.Buffer()
+      #listener = tf2_ros.TransformListener(tfBuffer)
+
+      #trans = geometry_msgs.msg.Transform()
+      
+      #try:
+      #   trans = tfBuffer.lookup_transform('torso_base_link', 'object_link', rospy.Time(), rospy.Duration(3.0))
+      #except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
+      #   rospy.loginfo('tf Transformation not available')
+      #   error = 1
+
+      #if (error==0):
+      #pose = geometry_msgs.msg.Pose()
+      pose = userdata.object_pose_input
+      #translation = trans.transform.translation
+      #rotation =  trans.transform.rotation
+      #pose.position = geometry_msgs.msg.Point(translation.x,translation.y,translation.z)
+      #pose.orientation = rotation
+      #print(pose)     
                   
       resp = create_pick_movements(pose)
 
@@ -107,7 +110,7 @@ class CreatePickMoves(smach.State):
       #userdata.robot_movements_output[2] = resp.robot_movements[2]
       
       
-     # print(userdata.robot_movements_output[0])
+      print(resp.robot_movements[0].position)
       
       
       rospy.loginfo('CREATE PICK MOVES')
@@ -118,10 +121,10 @@ class CreatePickMoves(smach.State):
         rospy.loginfo('ERROR creating pick moves')
         return 'error'
        
+    except rospy.ServiceException as exc:
+           rospy.loginfo('Service did not process request: %s', exc)  
+           return 'error'   
        
-    else:
-      return 'error'
-      
                 
     if self.preempt_requested():
       self.service_preempt()
@@ -139,28 +142,33 @@ class PlanCoarseMove(smach.State):
 
   def execute(self, userdata):
     
-    
+    rospy.loginfo('PLAN COARSE MOTION')
     rospy.wait_for_service('/motion_executor/plan_coarse_motion')
     
-    plan_coarse_motion=rospy.ServiceProxy('/motion_executor/plan_coarse_motion',PlanCoarseMotion)
+    try:
+      plan_coarse_motion=rospy.ServiceProxy('/motion_executor/plan_coarse_motion',PlanCoarseMotion)
 
-    req = PlanCoarseMotionRequest()
-    req.target_pose.position = userdata.robot_movements_input_approach.position
-    req.target_pose.orientation = userdata.robot_movements_input_approach.orientation
-    
-    req.move_group = "arm_right"
-    
-    resp = plan_coarse_motion(req)
+      req = PlanCoarseMotionRequest()
+      req.target_pose.position = userdata.robot_movements_input_approach.position
+      req.target_pose.orientation = userdata.robot_movements_input_approach.orientation
+      
+      req.move_group = "arm_right"
+      
+      resp = plan_coarse_motion(req)
 
-    userdata.coarse_trajectory_output = resp.coarse_trajectory
-    rospy.loginfo('PLAN COARSE MOTION')
+      userdata.coarse_trajectory_output = resp.coarse_trajectory
+      
 
-    
-    if(resp.success):
-      return 'success'
-    else:
-      return 'error' 
-            
+      
+      if(resp.success):
+        return 'success'
+      else:
+        return 'error' 
+        
+    except rospy.ServiceException as exc:
+         rospy.loginfo('Service did not process request: %s', exc)  
+         return 'error'  
+              
                 
     if self.preempt_requested():
       self.service_preempt()
@@ -182,7 +190,6 @@ class ExecuteCoarseMove(smach.State):
 
     
 
-    #TODO: this part is left for testing.. and error occurs when passing the parameters
     req = ExecuteCoarseMotionRequest()
     req.coarse_trajectory = userdata.coarse_trajectory_input
     req.move_group = "arm_right"
@@ -206,13 +213,17 @@ class ExecuteCoarseMove(smach.State):
 
 
 
-class PlanExecuteFineMove(smach.State):
+class PlanExecutePickFineMove(smach.State):
   def __init__(self):
     smach.State.__init__(self, outcomes=['success','error'], input_keys=['robot_movements_input_grasp',
     'robot_movements_input_retreat'])
 
   def execute(self, userdata):
     
+    ##TODO: make it generic group and object name must be passed from SM
+    move_group_= "arm_right"
+    move_group_tool_="gripper_3f"
+    object_name_= "tool_2"
     
     #Variable to track errors during the different FINE movements
     error=0
@@ -226,7 +237,7 @@ class PlanExecuteFineMove(smach.State):
     #Creating the request to approach object
     req = PlanExecuteFineMotionRequest()
     req.target_poses.append(userdata.robot_movements_input_grasp)
-    req.move_group = "arm_right"
+    req.move_group = move_group_
     resp = plan_execute_fine_move(req)
     
     if(resp.success):
@@ -234,13 +245,40 @@ class PlanExecuteFineMove(smach.State):
       ##-------------------
       ##GRASP THE OBJECT
       
-      rospy.loginfo('CLOSE GRIPPER AND ATTACH OBJECT')
+      rospy.loginfo('CLOSE GRIPPER')
       ##add here function
       time.sleep(2)
     
+      
+      ##-------------------
+      ##ATTACH OBJECT
+      rospy.wait_for_service('/pir_vision_utils_rviz/attached_object')
+      
+      try:
+        attach_object = rospy.ServiceProxy('/pir_vision_utils_rviz/attached_object',PirAttachObject)
+
+        req = PirAttachObjectRequest()
+        req.group_name = move_group_tool_
+        req.object_name = object_name_
+        resp = attach_object(req)
+        print(resp.status)
+        
+        #TODO: change Sucesfull for successful
+        if(resp.status=='sucesfull'):
+          print("Object ATTACHED")
+        else:
+          return 'error'  
+          print("Error attaching object") 
+
+      except rospy.ServiceException as exc:
+        rospy.loginfo('pyr_vision_system attach_object Service did not process request: %s', exc)  
+        return 'error'        
+ 
+      
+      rospy.loginfo('OBJECT ATTACHED')
+      
       ##-------------------
       ##RETREAT WITH OBJECT IN HAND
-
       rospy.wait_for_service('/motion_executor/plan_execute_fine_motion')
       plan_execute_fine_move = rospy.ServiceProxy('/motion_executor/plan_execute_fine_motion',PlanExecuteFineMotion)
 
@@ -278,6 +316,110 @@ class PlanExecuteFineMove(smach.State):
     else:
       return 'success'
 
+
+
+class PlanExecutePlaceFineMove(smach.State):
+  def __init__(self):
+    smach.State.__init__(self, outcomes=['success','error'], input_keys=['robot_movements_input_grasp',
+    'robot_movements_input_retreat'])
+
+  def execute(self, userdata):
+    
+    ##TODO: make it generic group and object name must be passed from SM
+    move_group_= "arm_right"
+    move_group_tool_="gripper_3f"
+    object_name_= "tool_2"
+    
+    #Variable to track errors during the different FINE movements
+    error=0
+    
+    ##-------------------
+    ##APPROACH OBJECT
+    rospy.wait_for_service('/motion_executor/plan_execute_fine_motion')
+    plan_execute_fine_move = rospy.ServiceProxy('/motion_executor/plan_execute_fine_motion',PlanExecuteFineMotion)
+
+
+    #Creating the request to approach object
+    req = PlanExecuteFineMotionRequest()
+    req.target_poses.append(userdata.robot_movements_input_grasp)
+    req.move_group = move_group_
+    resp = plan_execute_fine_move(req)
+    
+    if(resp.success):
+      rospy.loginfo('FINE MOTION APPROACH OBJECT')
+      ##-------------------
+      ##GRASP THE OBJECT
+      
+      rospy.loginfo('OPEN GRIPPER')
+      ##add here function
+      time.sleep(2)
+    
+      
+      ##-------------------
+      ##DETACH OBJECT
+      rospy.wait_for_service('/pir_vision_utils_rviz/detach_object')
+      
+      try:
+        attach_object = rospy.ServiceProxy('/pir_vision_utils_rviz/detach_object',PirDetachObject)
+
+        req = PirDetachObjectRequest()
+        req.group_name = move_group_tool_
+        req.object_name = object_name_
+        resp = attach_object(req)
+        print(resp.status)
+        
+        #TODO: change Sucesfull for successful
+        if(resp.status=='sucesfull'):
+          print("Object DETACHED")
+        else:
+          return 'error'  
+          print("Error detaching object") 
+
+      except rospy.ServiceException as exc:
+        rospy.loginfo('pyr_vision_system detach_object Service did not process request: %s', exc)  
+        return 'error'        
+ 
+      
+      rospy.loginfo('OBJECT DETACHED')
+      
+      ##-------------------
+      ##RETREAT WITH OBJECT IN HAND
+      rospy.wait_for_service('/motion_executor/plan_execute_fine_motion')
+      plan_execute_fine_move = rospy.ServiceProxy('/motion_executor/plan_execute_fine_motion',PlanExecuteFineMotion)
+
+
+      #Creating the request to approach object
+      req2 = PlanExecuteFineMotionRequest()
+      req2.target_poses.append(userdata.robot_movements_input_retreat)
+      req2.move_group = "arm_right"
+      resp = plan_execute_fine_move(req2)
+    
+      if(resp.success):
+        rospy.loginfo('FINE MOTION RETREAT WITH OBJECT')
+      else:
+        rospy.loginfo('ERROR ---> FINE MOTION RETREAT WITH OBJECT')
+        error=1; 
+      
+      
+      
+    else:
+      rospy.loginfo('ERROR   ---> FINE MOTION APPROACH OBJECT')
+      error=1; 
+
+    
+    
+    
+    if(error==0):
+      return 'success'
+    else:
+      return 'error' 
+            
+                
+    if self.preempt_requested():
+      self.service_preempt()
+      return 'error'
+    else:
+      return 'success'
 
 
 
