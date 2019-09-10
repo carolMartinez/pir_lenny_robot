@@ -1,11 +1,23 @@
 when compiling pir_vision_system comment in the package xml the following
-	<!--<exec_depend>pir_vision_cameras</exec_depend> -->
-	<!--<exec_depend>pir_vision_bottle_detection</exec_depend> -->
+	<!--  <exec_depend>pir_vision_environment_interaction</exec_depend>
+  <exec_depend>pir_vision_cameras</exec_depend> 
+  <exec_depend>pir_vision_bottle_detection</exec_depend> -->
+  
+  if when running: 
+  roslaunch pir_vision_bringup pir_vision_bringup.launch pir_vision_fake:=true
+you get the following error
+  ERROR: cannot launch node of type [pir_vision_test/pir_vision_test_client_tool.py]: can't locate node [pir_vision_test_client_tool.py] in package [pir_vision_test]
+Please, make sure the python scripts have executable permissions.
+
+
+
 
 Para pir_vision
 TODO: path relativos en el launch... 
 
 Wilson:
+En {ultima versi{on la funci{on attach object does not return ANYTHING.
+i ADDED : res.status = "sucesfull";
 
 Es successful no successfull 
 No crear service 1 service 2 service 3 etc....                                                                                                                                                                                                         

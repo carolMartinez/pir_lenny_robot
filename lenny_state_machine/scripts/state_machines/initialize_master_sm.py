@@ -3,18 +3,20 @@ import roslib
 import smach
 
 
-from states.motion_states import *
-from lenny_msgs.srv import *
+from states.motion_states import MoveRobotHome
+from states.utilities_states import DetachObjects
+
 from smach_ros import ServiceState
+
         
         
 def makeInitMasterSM():
 	
 	sm = smach.StateMachine(outcomes=['succeeded','aborted'])
 
-	req = MoveToHomeRequest()
-	req.pose_name = "OVERHEAD_WAIT"
-	req.move_group = "arm_right"
+	#req = MoveToHomeRequest()
+	#req.pose_name = "OVERHEAD_WAIT"
+	#req.move_group = "arm_right"
 
 	with sm:
 		# Configure camera node.
@@ -65,6 +67,11 @@ def makeInitMasterSM():
 		#			'aborted':'aborted',
 		#			'preempted':'aborted'}
 		#)
+		smach.StateMachine.add('DETACH_OBJECTS',DetachObjects(),
+				transitions = {
+					'success':'succeeded',
+					'error':'aborted'}
+		)
 		smach.StateMachine.add('MOVE_HOME_INIT',MoveRobotHome(),
 				transitions = {
 					'done':'succeeded',

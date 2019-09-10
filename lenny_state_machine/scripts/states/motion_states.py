@@ -10,7 +10,8 @@ import moveit_commander
 import tf2_ros
 
 from lenny_msgs.srv import *
-from pir_vision_msgs.srv import *
+from pir_vision_msgs.srv import PirAttachObject, PirAttachObjectRequest
+from pir_vision_msgs.srv import PirDetachObject, PirDetachObjectRequest
 
 
 
@@ -357,7 +358,7 @@ class PlanExecutePlaceFineMove(smach.State):
       
       ##-------------------
       ##DETACH OBJECT
-      rospy.wait_for_service('/pir_vision_utils_rviz/detach_object')
+      rospy.wait_for_service('/s_vision_utils_rviz/detach_object')
       
       try:
         attach_object = rospy.ServiceProxy('/pir_vision_utils_rviz/detach_object',PirDetachObject)
