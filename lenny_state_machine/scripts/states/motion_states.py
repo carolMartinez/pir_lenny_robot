@@ -57,11 +57,11 @@ class MoveRobotHome(smach.State):
     
 
 class CreatePickMoves(smach.State):
-  def __init__(self):
+  def __init__(self, dataSM):
     smach.State.__init__(self, outcomes=['success','error'], input_keys=['object_pose_input'],
     output_keys=['robot_movements_output_approach', 'robot_movements_output_preGrasp',
     'robot_movements_output_grasp','robot_movements_output_retreat'])
-    
+    self.dataSM = dataSM
     
   def execute(self, userdata):
     
@@ -85,15 +85,18 @@ class CreatePickMoves(smach.State):
 
       #if (error==0):
       #pose = geometry_msgs.msg.Pose()
-      pose = userdata.object_pose_input
+      req = CreatePickMovementsRequest()
+       
+      req.object_pose = userdata.object_pose_input
+      req.move_group = self.dataSM.planning_group_robot
       #translation = trans.transform.translation
       #rotation =  trans.transform.rotation
       #pose.position = geometry_msgs.msg.Point(translation.x,translation.y,translation.z)
       #pose.orientation = rotation
       #print(pose)     
                   
-      resp = create_pick_movements(pose)
-
+      resp = create_pick_movements(req)
+     
       #userdata.robot_movements_output = [geometry_msgs.msg.Pose(), geometry_msgs.msg.Pose(), geometry_msgs.msg.Pose()]
 
     
@@ -138,8 +141,11 @@ class CreatePickMoves(smach.State):
 
 
 class PlanCoarseMove(smach.State):
-  def __init__(self):
-    smach.State.__init__(self, outcomes=['success','error'], input_keys=['robot_movements_input_approach'], output_keys=['coarse_trajectory_output'])
+  def __init__(self, dataSM):
+    smach.State.__init__(self, outcomes=['success','error'], input_keys=['robot_movements_input_approach'], 
+    output_keys=['coarse_trajectory_output'])
+    
+    self.dataSM = dataSM  
 
   def execute(self, userdata):
     
@@ -153,7 +159,7 @@ class PlanCoarseMove(smach.State):
       req.target_pose.position = userdata.robot_movements_input_approach.position
       req.target_pose.orientation = userdata.robot_movements_input_approach.orientation
       
-      req.move_group = "arm_right"
+      req.move_group = self.dataSM.planning_group_robot
       
       resp = plan_coarse_motion(req)
 
@@ -179,8 +185,9 @@ class PlanCoarseMove(smach.State):
 
 
 class ExecuteCoarseMove(smach.State):
-  def __init__(self):
+  def __init__(self, dataSM):
     smach.State.__init__(self, outcomes=['success','error'], input_keys=['coarse_trajectory_input'])
+    self.dataSM = dataSM
 
   def execute(self, userdata):
     
@@ -193,7 +200,7 @@ class ExecuteCoarseMove(smach.State):
 
     req = ExecuteCoarseMotionRequest()
     req.coarse_trajectory = userdata.coarse_trajectory_input
-    req.move_group = "arm_right"
+    req.move_group = self.dataSM.planning_group_robot
     
     resp = execute_coarse_move(req)
     
@@ -215,16 +222,16 @@ class ExecuteCoarseMove(smach.State):
 
 
 class PlanExecutePickFineMove(smach.State):
-  def __init__(self):
+  def __init__(self, dataSM):
     smach.State.__init__(self, outcomes=['success','error'], input_keys=['robot_movements_input_grasp',
     'robot_movements_input_retreat'])
-
+    self.dataSM = dataSM
+    
   def execute(self, userdata):
     
-    ##TODO: make it generic group and object name must be passed from SM
-    move_group_= "arm_right"
-    move_group_tool_="gripper_3f"
-    object_name_= "tool_2"
+    move_group_ = self.dataSM.planning_group_robot 
+    move_group_tool_ = self.dataSM.planning_group_tool
+    object_name_ = self.dataSM.tool_name
     
     #Variable to track errors during the different FINE movements
     error=0
@@ -248,7 +255,7 @@ class PlanExecutePickFineMove(smach.State):
       
       rospy.loginfo('CLOSE GRIPPER')
       ##add here function
-      time.sleep(2)
+      time.sleep(1)
     
       
       ##-------------------
@@ -287,7 +294,7 @@ class PlanExecutePickFineMove(smach.State):
       #Creating the request to approach object
       req2 = PlanExecuteFineMotionRequest()
       req2.target_poses.append(userdata.robot_movements_input_retreat)
-      req2.move_group = "arm_right"
+      req2.move_group = move_group_
       resp = plan_execute_fine_move(req2)
     
       if(resp.success):
@@ -320,17 +327,18 @@ class PlanExecutePickFineMove(smach.State):
 
 
 class PlanExecutePlaceFineMove(smach.State):
-  def __init__(self):
+  def __init__(self, dataSM):
     smach.State.__init__(self, outcomes=['success','error'], input_keys=['robot_movements_input_grasp',
     'robot_movements_input_retreat'])
+    self.dataSM = dataSM
 
   def execute(self, userdata):
     
     ##TODO: make it generic group and object name must be passed from SM
-    move_group_= "arm_right"
-    move_group_tool_="gripper_3f"
-    object_name_= "tool_2"
-    
+    move_group_ = self.dataSM.planning_group_robot 
+    move_group_tool_ = self.dataSM.planning_group_tool
+    object_name_ = self.dataSM.tool_name
+   
     #Variable to track errors during the different FINE movements
     error=0
     
@@ -353,12 +361,12 @@ class PlanExecutePlaceFineMove(smach.State):
       
       rospy.loginfo('OPEN GRIPPER')
       ##add here function
-      time.sleep(2)
+      time.sleep(1)
     
       
       ##-------------------
       ##DETACH OBJECT
-      rospy.wait_for_service('/s_vision_utils_rviz/detach_object')
+      rospy.wait_for_service('/pir_vision_utils_rviz/detach_object')
       
       try:
         attach_object = rospy.ServiceProxy('/pir_vision_utils_rviz/detach_object',PirDetachObject)

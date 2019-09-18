@@ -9,7 +9,7 @@ from states.motion_states import *
 from trajectory_msgs.msg import JointTrajectory
         
         
-def makePlaceToolSM():
+def makePlaceToolSM(dataSM):
   
   sm = smach.StateMachine(outcomes=['success','error'])
 
@@ -37,7 +37,7 @@ def makePlaceToolSM():
                         
           print(sm.userdata.sm_user_place_pose)
 
-          smach.StateMachine.add('CREATE_PLACE_MOVES',CreatePickMoves(),
+          smach.StateMachine.add('CREATE_PLACE_MOVES',CreatePickMoves(dataSM),
                         transitions = {
                         'success':'PLAN_COARSE',
                         'error':'error'},
@@ -48,7 +48,7 @@ def makePlaceToolSM():
                         'robot_movements_output_retreat' : 'sm_user_place_pose_retreat'}
                         )
                         
-          smach.StateMachine.add('PLAN_COARSE',PlanCoarseMove(),
+          smach.StateMachine.add('PLAN_COARSE',PlanCoarseMove(dataSM),
                         transitions = {
                         'success':'MOVE_COARSE',
                         'error':'error'},
@@ -56,14 +56,14 @@ def makePlaceToolSM():
                         'coarse_trajectory_output' : 'sm_user_trajectory'} 
                         )
 
-          smach.StateMachine.add('MOVE_COARSE',ExecuteCoarseMove(),
+          smach.StateMachine.add('MOVE_COARSE',ExecuteCoarseMove(dataSM),
                         transitions = {
                         'success':'PLACE_TOOL',
                         'error':'error'},
                         remapping = {'coarse_trajectory_input' : 'sm_user_trajectory'} 
                         )
                         
-          smach.StateMachine.add('PLACE_TOOL',PlanExecutePlaceFineMove(),
+          smach.StateMachine.add('PLACE_TOOL',PlanExecutePlaceFineMove(dataSM),
                         transitions = {
                         'success':'RESTORE_TCP',
                         'error':'error'},
@@ -72,7 +72,7 @@ def makePlaceToolSM():
                         'robot_movements_input_retreat' : 'sm_user_place_pose_retreat'} 
                         )
                         
-          smach.StateMachine.add('RESTORE_TCP',ReinitTCP(),
+          smach.StateMachine.add('RESTORE_TCP',ReinitTCP(dataSM),
                         transitions = {
                         'success':'success',
                         'error':'error'}

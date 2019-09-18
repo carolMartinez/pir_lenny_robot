@@ -19,13 +19,15 @@ class DetectToolMagazine(smach.State):
 
   def execute(self, userdata):
    
-    userdata.place_pose_output.position.x = -0.12
-    userdata.place_pose_output.position.y = 0.61
-    userdata.place_pose_output.position.z = 0.99
-    userdata.place_pose_output.orientation.x = 0.0
-    userdata.place_pose_output.orientation.y = 3.14
-    userdata.place_pose_output.orientation.z = 0.0
-    userdata.place_pose_output.orientation.w = 1.0
+   ##TODO: MAke it generic
+    vector_place_pose=rospy.get_param("/pir_vision_back_pose/tool_2")
+    userdata.place_pose_output.position.x = vector_place_pose[0]
+    userdata.place_pose_output.position.y = vector_place_pose[1]
+    userdata.place_pose_output.position.z = vector_place_pose[2]
+    userdata.place_pose_output.orientation.x = vector_place_pose[3]
+    userdata.place_pose_output.orientation.y = vector_place_pose[4]
+    userdata.place_pose_output.orientation.z = vector_place_pose[5]
+    userdata.place_pose_output.orientation.w = vector_place_pose[6]
     
     return 'success'
      
@@ -41,9 +43,10 @@ class DetectToolMagazine(smach.State):
 
 
 class ReinitTCP(smach.State):
-  def __init__(self):
+  def __init__(self, dataSM):
     smach.State.__init__(self,
                 outcomes = ['success', 'error'])
+    self.dataSM = dataSM
 
   def execute(self, userdata):
     rospy.loginfo('Calling Service Change TCP')
@@ -51,12 +54,12 @@ class ReinitTCP(smach.State):
     
     try:
           #Moving ARMS to a HOME position to pick up the tool
-          change_TCP= rospy.ServiceProxy('/motion_executor/restoreTCP', ExtendTCP)
+          change_TCP= rospy.ServiceProxy('/motion_executor/restoreTCP', RestoreTCP)
           
           ##TODO: Change to make it generic, arm_right should be a variable.... passed
           ##throug the State Machine.
-          req = ExtendTCPRequest()
-          req.arm_name = "arm_right"
+          req = RestoreTCPRequest()
+          req.arm_name = self.dataSM.planning_group_robot
           
           resp = change_TCP(req)
            
@@ -66,7 +69,7 @@ class ReinitTCP(smach.State):
             return 'error' 
           
     except rospy.ServiceException as exc:
-           rospy.loginfo('Extend_TCP service did not process request: %s', exc)  
+           rospy.loginfo('Restore_TCP service did not process request: %s', exc)  
            return 'error'   
       
     if self.preempt_requested():

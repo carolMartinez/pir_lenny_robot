@@ -8,8 +8,9 @@
   
   
  
-    <node type="master_sm.py" pkg="lenny_state_machine" name="master_sm" output="screen" required="true" />
+    <!-- <node type="master_sm.py" pkg="lenny_state_machine" name="master_sm" output="screen" required="true" /> -->
 
+  <node type="masterPickUpBottles_sm.py" pkg="lenny_state_machine" name="master_sm" output="screen" required="true" />
  <!-- <node type="tool_master_sm.py" pkg="lenny_state_machine"
    name="tool_master_sm" output="screen" required="true"/> -->
 

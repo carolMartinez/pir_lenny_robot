@@ -7,9 +7,11 @@ import smach
 from states.pick_tool_states import *
 from states.motion_states import *
 from trajectory_msgs.msg import JointTrajectory
+from states.pick_tool_states import MoveHomePickTools
+from states.pick_bottle_states import MoveHomePickBottles
         
         
-def makePickToolSM():
+def makePickToolSM(dataSM):
   
   sm = smach.StateMachine(outcomes=['success','error'])
 
@@ -20,19 +22,25 @@ def makePickToolSM():
   sm.userdata.sm_user_pose_retreat = geometry_msgs.msg.Pose()
   sm.userdata.sm_user_trajectory = trajectory_msgs.msg.JointTrajectory()
 
-  with sm:
+  
 
-          smach.StateMachine.add('DETECT_TOOL',DetectTool(),
+  with sm:
+    
+    
+          smach.StateMachine.add('MOVE_HOME_PICK_TOOLS',MoveHomePickTools(dataSM),
+                        transitions = {'pick':'DETECT_TOOL',
+                        'error':'error'})
+
+          smach.StateMachine.add('DETECT_TOOL',DetectTool(dataSM),
                         transitions = {
                         'success':'CREATE_PICK_MOVES',
                         'error':'error'},
                         remapping = {
-                        'tool_pose_output' : 'sm_user_object_pose'}
+                        'tool_pose_output' : 'sm_user_object_pose' }
                         )
-                        
-          print(sm.userdata.sm_user_object_pose)
 
-          smach.StateMachine.add('CREATE_PICK_MOVES',CreatePickMoves(),
+
+          smach.StateMachine.add('CREATE_PICK_MOVES',CreatePickMoves(dataSM),
                         transitions = {
                         'success':'PLAN_COARSE',
                         'error':'error'},
@@ -43,7 +51,7 @@ def makePickToolSM():
                         'robot_movements_output_retreat' : 'sm_user_pose_retreat'}
                         )
                         
-          smach.StateMachine.add('PLAN_COARSE',PlanCoarseMove(),
+          smach.StateMachine.add('PLAN_COARSE',PlanCoarseMove(dataSM),
                         transitions = {
                         'success':'MOVE_COARSE',
                         'error':'error'},
@@ -51,14 +59,14 @@ def makePickToolSM():
                         'coarse_trajectory_output' : 'sm_user_trajectory'} 
                         )
 
-          smach.StateMachine.add('MOVE_COARSE',ExecuteCoarseMove(),
+          smach.StateMachine.add('MOVE_COARSE',ExecuteCoarseMove(dataSM),
                         transitions = {
                         'success':'PICK_TOOL',
                         'error':'error'},
                         remapping = {'coarse_trajectory_input' : 'sm_user_trajectory'} 
                         )
                         
-          smach.StateMachine.add('PICK_TOOL',PlanExecutePickFineMove(),
+          smach.StateMachine.add('PICK_TOOL',PlanExecutePickFineMove(dataSM),
                         transitions = {
                         'success':'EXTEND_TCP',
                         'error':'error'},
@@ -67,10 +75,14 @@ def makePickToolSM():
                         'robot_movements_input_retreat' : 'sm_user_pose_retreat'} 
                         )
                         
-          smach.StateMachine.add('EXTEND_TCP',ChangeTCP(),
+          smach.StateMachine.add('EXTEND_TCP',ChangeTCP(dataSM),
                         transitions = {
-                        'success':'success',
+                        'success':'MOVE_HOME_PICK_BOTTLES',
                         'error':'error'}
                         )
+                        
+          smach.StateMachine.add('MOVE_HOME_PICK_BOTTLES',MoveHomePickBottles(),
+                        transitions = {'success':'success',
+                        'error':'error'})
          
           return sm

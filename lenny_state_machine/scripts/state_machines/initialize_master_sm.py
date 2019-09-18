@@ -10,7 +10,7 @@ from smach_ros import ServiceState
 
         
         
-def makeInitMasterSM():
+def makeInitMasterSM(dataSM):
 	
 	sm = smach.StateMachine(outcomes=['succeeded','aborted'])
 

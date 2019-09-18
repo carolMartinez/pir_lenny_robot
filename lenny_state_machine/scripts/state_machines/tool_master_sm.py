@@ -45,7 +45,7 @@ def makeToolMasterSM():
 		smach.StateMachine.add(
 				'PLACE_TOOL_SM',makePlaceToolSM(),
 				transitions = {
-					'success':'PLACE_TOOL_SM',
+					'success':'success',
 					'error':'error'}
 		)
 		

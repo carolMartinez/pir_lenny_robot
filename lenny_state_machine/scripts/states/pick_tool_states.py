@@ -12,12 +12,19 @@ from pir_vision_msgs.srv import *
 
 
 class DetectTool(smach.State):
-  def __init__(self):
+  def __init__(self,dataSM):
     smach.State.__init__(self, outcomes=['success','error'], 
-                              input_keys=['tool_pose_output'],
+                              input_keys=['tool_pose_output', 'tool_name_input'],
                               output_keys=['tool_pose_output'])
+    self.dataSM = dataSM
 
   def execute(self, userdata):
+   
+   #Variables for detecting the tool
+    tool_type = "tool"
+    #tool_name =  userdata.tool_name_input
+    tool_name =  self.dataSM.tool_name
+    print(tool_name)
    
     rospy.wait_for_service('/pir_vision_utils_rviz/get_pose_object')
     #rospy.wait_for_service('/pir_vision_utils_rviz/get_pose_tcp_object')
@@ -28,8 +35,8 @@ class DetectTool(smach.State):
           #detect_tool_pose = rospy.ServiceProxy('/pir_vision_utils_rviz/get_pose_tcp_object', PirPositionObject)
           
           req = PirPositionObjectRequest()
-          req.object_type = "tool"
-          req.object_name = "tool_2"
+          req.object_type = tool_type
+          req.object_name = tool_name
   
           resp = detect_tool_pose(req)
           print(resp.status)
@@ -58,8 +65,9 @@ class DetectTool(smach.State):
   
   
 class MoveHomePickTools(smach.State):
-  def __init__(self):
-    smach.State.__init__(self, outcomes=['pick','place','error'])
+  def __init__(self, dataSM):
+    smach.State.__init__(self, outcomes=['pick','error'])
+    self.dataSM = dataSM
 
   def execute(self, userdata):
     #userdata.print_input = None
@@ -75,7 +83,12 @@ class MoveHomePickTools(smach.State):
           #this because the go to pose goal did not work in c++
           move_group = moveit_commander.MoveGroupCommander('sda10f')
           joint_goal = move_group.get_current_joint_values()
-          joint_goal[0] = 2.9000
+          
+          if(self.dataSM.planning_group_robot == "arm_right"):
+            joint_goal[0] = 2.9000
+          if(self.dataSM.planning_group_robot == "arm_left"):
+            joint_goal[0] = 1.6000
+            
           plan=move_group.go(joint_goal,wait=True)
           
           if(plan):
@@ -99,9 +112,10 @@ class MoveHomePickTools(smach.State):
 
 
 class ChangeTCP(smach.State):
-  def __init__(self):
+  def __init__(self, dataSM):
     smach.State.__init__(self,
                 outcomes = ['success', 'error'])
+    self.dataSM = dataSM
 
   def execute(self, userdata):
     rospy.loginfo('Calling Service Change TCP')
@@ -114,7 +128,7 @@ class ChangeTCP(smach.State):
           ##TODO: Change to make it generic, arm_right should be a variable.... passed
           ##throug the State Machine.
           req = ExtendTCPRequest()
-          req.arm_name = "arm_right"
+          req.arm_name = self.dataSM.planning_group_robot
           req.distance = 0.7
           resp = change_TCP(req)
            
