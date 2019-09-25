@@ -12,7 +12,7 @@ from smach_ros import ServiceState
         
 def makeInitMasterSM(dataSM):
 	
-	sm = smach.StateMachine(outcomes=['succeeded','aborted'])
+	sm = smach.StateMachine(outcomes=['success','aborted'])
 
 	#req = MoveToHomeRequest()
 	#req.pose_name = "OVERHEAD_WAIT"
@@ -67,14 +67,14 @@ def makeInitMasterSM(dataSM):
 		#			'aborted':'aborted',
 		#			'preempted':'aborted'}
 		#)
-		smach.StateMachine.add('DETACH_OBJECTS',DetachObjects(),
+		smach.StateMachine.add('DETACH_OBJECTS',DetachObjects(dataSM),
 				transitions = {
-					'success':'succeeded',
+					'success':'MOVE_HOME_INIT',
 					'error':'aborted'}
 		)
 		smach.StateMachine.add('MOVE_HOME_INIT',MoveRobotHome(),
 				transitions = {
-					'done':'succeeded',
+					'success':'success',
 					'error':'aborted'}
 		)
 

@@ -33,7 +33,7 @@
 #include <apc16delft_msgs/ExecuteFineMotion.h>
 #include <apc16delft_msgs/ExecuteStitchedMotion.h>
 #include <apc16delft_msgs/ExecuteCalibrationMotion.h>*/
-#include <lenny_msgs/MoveToPose.h>
+#include <lenny_msgs/MoveToPredefinedPose.h>
 #include <lenny_msgs/CreatePickMovements.h>
 #include <lenny_msgs/ExecuteCoarseMotion.h>
 #include <lenny_msgs/PlanCoarseMotion.h>
@@ -81,7 +81,7 @@ private:
 	ros::ServiceServer execute_fine_motion_;
 	ros::ServiceServer execute_stitched_motion_;
 	ros::ServiceServer execute_calibration_motion_;*/
-	ros::ServiceServer move_to_pose_;
+	ros::ServiceServer move_to_predefined_pose_;
 	ros::ServiceServer create_pick_movements_;
 	ros::ServiceServer execute_coarse_motion_;
 	ros::ServiceServer plan_coarse_motion_;
@@ -132,7 +132,7 @@ protected:
 	bool executeStitchedMotion(apc16delft_msgs::ExecuteStitchedMotion::Request & req, apc16delft_msgs::ExecuteStitchedMotion::Response & res);
 	bool executeFineMotion(apc16delft_msgs::ExecuteFineMotion::Request & req, apc16delft_msgs::ExecuteFineMotion::Response & res);
 	bool executeCalibrationMotion(apc16delft_msgs::ExecuteCalibrationMotion::Request & req, apc16delft_msgs::ExecuteCalibrationMotion::Response & res);*/
-	bool moveToPose(lenny_msgs::MoveToPose::Request & req, lenny_msgs::MoveToPose::Response & res);
+	bool moveToPredefinedPose(lenny_msgs::MoveToPredefinedPose::Request & req, lenny_msgs::MoveToPredefinedPose::Response & res);
 	
 	bool createPickMovements(lenny_msgs::CreatePickMovements::Request & req, lenny_msgs::CreatePickMovements::Response & res);
 

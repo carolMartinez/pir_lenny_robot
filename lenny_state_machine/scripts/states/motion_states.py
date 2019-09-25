@@ -18,18 +18,18 @@ from pir_vision_msgs.srv import PirDetachObject, PirDetachObjectRequest
 
 class MoveRobotHome(smach.State):
   def __init__(self):
-    smach.State.__init__(self, outcomes=['done','error'],
+    smach.State.__init__(self, outcomes=['success','error'],
                                 input_keys=['print_input'],
                                 output_keys=['print_output'])
 
   def execute(self, userdata):
     rospy.loginfo('MOVE ROBOT INIT STATE')
-    rospy.wait_for_service('/motion_executor/move_to_pose')
+    rospy.wait_for_service('/motion_executor/move_to_predefined_pose')
     
     try:
           #Moving ARMS to a HOME position to pick up the tool
-          move_to_home = rospy.ServiceProxy('/motion_executor/move_to_pose', MoveToHome)
-          resp = move_to_home("PICK_WAIT","arms")
+          move_to_wait = rospy.ServiceProxy('/motion_executor/move_to_predefined_pose', MoveToPredefinedPose)
+          resp = move_to_wait("PICK_WAIT","arms")
            
           #Moving TORSO to HOME
           #Using movegroup python interface to move only the toros.
@@ -40,7 +40,7 @@ class MoveRobotHome(smach.State):
           plan=move_group.go(joint_goal,wait=True)
           
           if(plan):
-            return 'done'
+            return 'success'
           else:
             return 'error' 
           
@@ -355,9 +355,9 @@ class PlanExecutePlaceFineMove(smach.State):
     resp = plan_execute_fine_move(req)
     
     if(resp.success):
-      rospy.loginfo('FINE MOTION APPROACH OBJECT')
+      rospy.loginfo('FINE MOTION APPROACH TO LEAVE OBJECT')
       ##-------------------
-      ##GRASP THE OBJECT
+      ##LEAVE THE OBJECT
       
       rospy.loginfo('OPEN GRIPPER')
       ##add here function
@@ -375,7 +375,6 @@ class PlanExecutePlaceFineMove(smach.State):
         req.group_name = move_group_tool_
         req.object_name = object_name_
         resp = attach_object(req)
-        print(resp.status)
         
         #TODO: change Sucesfull for successful
         if(resp.status=='sucesfull'):
@@ -392,21 +391,22 @@ class PlanExecutePlaceFineMove(smach.State):
       rospy.loginfo('OBJECT DETACHED')
       
       ##-------------------
-      ##RETREAT WITH OBJECT IN HAND
+      ##RETREAT WITHOUT OBJECT
       rospy.wait_for_service('/motion_executor/plan_execute_fine_motion')
       plan_execute_fine_move = rospy.ServiceProxy('/motion_executor/plan_execute_fine_motion',PlanExecuteFineMotion)
 
 
-      #Creating the request to approach object
+      #Creating the request to RETREAT
       req2 = PlanExecuteFineMotionRequest()
       req2.target_poses.append(userdata.robot_movements_input_retreat)
-      req2.move_group = "arm_right"
+      req2.move_group = move_group_
       resp = plan_execute_fine_move(req2)
     
+    
       if(resp.success):
-        rospy.loginfo('FINE MOTION RETREAT WITH OBJECT')
+        rospy.loginfo('FINE MOTION RETREAT WITHOUT OBJECT')
       else:
-        rospy.loginfo('ERROR ---> FINE MOTION RETREAT WITH OBJECT')
+        rospy.loginfo('ERROR ---> FINE MOTION RETREAT WITHOUT OBJECT')
         error=1; 
       
       

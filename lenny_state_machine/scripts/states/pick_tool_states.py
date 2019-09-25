@@ -71,12 +71,12 @@ class MoveHomePickTools(smach.State):
 
   def execute(self, userdata):
     #userdata.print_input = None
-    rospy.wait_for_service('/motion_executor/move_to_pose')
+    rospy.wait_for_service('/motion_executor/move_to_predefined_pose')
     
     try:
           #Moving ARMS to a HOME position to pick up the tool
-          move_to_home = rospy.ServiceProxy('/motion_executor/move_to_pose', MoveToPose)
-          resp = move_to_home("PICK_WAIT","arms")
+          move_to_wait = rospy.ServiceProxy('/motion_executor/move_to_predefined_pose', MoveToPredefinedPose)
+          resp = move_to_wait("PICK_WAIT","arms")
            
           #Moving TORSO to HOME
           #Using movegroup python interface to move only the toros.
@@ -131,6 +131,10 @@ class ChangeTCP(smach.State):
           req.arm_name = self.dataSM.planning_group_robot
           req.distance = 0.7
           resp = change_TCP(req)
+           
+          #Update info about the tool that was picked up.
+          self.dataSM.tool_in_arm = self.dataSM.planning_group_robot
+           
            
           if(resp.success):
             return 'success'

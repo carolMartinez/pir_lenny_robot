@@ -7,11 +7,11 @@ import smach
 from states.place_tool_states import *
 from states.motion_states import *
 from trajectory_msgs.msg import JointTrajectory
-        
+from states.pick_bottle_states import MoveHomePickBottles        
         
 def makePlaceToolSM(dataSM):
   
-  sm = smach.StateMachine(outcomes=['success','error'])
+  sm = smach.StateMachine(outcomes=['success','error','need_tool'])
 
   sm.userdata.sm_user_place_pose = geometry_msgs.msg.Pose()
   sm.userdata.sm_user_place_pose_approach = geometry_msgs.msg.Pose()
@@ -22,12 +22,12 @@ def makePlaceToolSM(dataSM):
 
   with sm:
     
-          smach.StateMachine.add('MOVE_HOME_PLACE_TOOLS',MoveHomePlaceTools(),
+          smach.StateMachine.add('MOVE_HOME_PLACE_TOOLS',MoveHomePlaceTools(dataSM),
                         transitions = {
                         'success':'DETECT_PLACE_TOOL'}
                         )
 
-          smach.StateMachine.add('DETECT_PLACE_TOOL',DetectToolMagazine(),
+          smach.StateMachine.add('DETECT_PLACE_TOOL',DetectToolMagazine(dataSM),
                         transitions = {
                         'success':'CREATE_PLACE_MOVES',
                         'error':'error'},
@@ -71,11 +71,20 @@ def makePlaceToolSM(dataSM):
                         'robot_movements_input_grasp' : 'sm_user_place_pose_grasp',
                         'robot_movements_input_retreat' : 'sm_user_place_pose_retreat'} 
                         )
-                        
+          
           smach.StateMachine.add('RESTORE_TCP',ReinitTCP(dataSM),
                         transitions = {
-                        'success':'success',
-                        'error':'error'}
-                        )
+                        'success':'MOVE_HOME_PICK_BOTTLES',
+                        'error':'error',
+                        'pick': 'need_tool' }
+                        )              
+          
+          smach.StateMachine.add('MOVE_HOME_PICK_BOTTLES',MoveHomePickBottles(),
+                        transitions = {'success':'RESTORE_TCP',
+                        'error':'error'})
+                        
+          
+          
+          
          
           return sm

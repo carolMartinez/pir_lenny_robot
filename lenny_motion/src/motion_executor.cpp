@@ -33,7 +33,7 @@ MotionExecutor::MotionExecutor() :
 	execute_stitched_motion_    = node_handle_.advertiseService("execute_stitched_motion", &MotionExecutor::executeStitchedMotion, this);
 	execute_calibration_motion_ = node_handle_.advertiseService("execute_calibration_motion", &MotionExecutor::executeCalibrationMotion, this);*/
 	
-	move_to_pose_               = node_handle_.advertiseService("move_to_pose", &MotionExecutor::moveToPose, this);
+	move_to_predefined_pose_               = node_handle_.advertiseService("move_to_predefined_pose", &MotionExecutor::moveToPredefinedPose, this);
 
   create_pick_movements_          = node_handle_.advertiseService("create_pick_movements", &MotionExecutor::createPickMovements, this);
   
@@ -371,7 +371,9 @@ bool MotionExecutor::executeCalibrationMotion(apc16delft_msgs::ExecuteCalibratio
 
 */
 
-bool MotionExecutor::moveToPose(lenny_msgs::MoveToPose::Request & req, lenny_msgs::MoveToPose::Response & res)
+//TODO:Change name that can be missleading. Maybe move to predefined pose
+
+bool MotionExecutor::moveToPredefinedPose(lenny_msgs::MoveToPredefinedPose::Request & req, lenny_msgs::MoveToPredefinedPose::Response & res)
 {
 	
 	moveit::planning_interface::MoveGroupInterface group(req.move_group);

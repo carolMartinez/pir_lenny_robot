@@ -50,16 +50,16 @@ from geometry_msgs.msg import Pose
 class DataBetweenStates:
   def __init__(self):
 
-    self.tool_name = "tool_1"
+    self.tool_name = "tool_2"
     self.ee_arm_right = "gripper_3f"
     self.ee_arm_left = "gripper_2f"
     self.planning_group_robot = "arm_left"
     self.planning_group_tool = "gripper_2f"
-    
-    self.tool_in_arm = "no"
-    self.tool_pose = Pose()
-    self.object_to_pick = Pose()
-    
+    self.planning_pose = Pose()
+    self.change_tool_hand = False
+    self.simulation_mode = "no"
+    self.tool_in_arm = " "
+
         
 def main():
   
@@ -70,13 +70,14 @@ def main():
     sm_root.userdata.sm_tool_name = " "
     
     
+    
     dataSM = DataBetweenStates()              
     
     with sm_root:
       
         
         smach.StateMachine.add('INIT_MASTER_SM', makeInitMasterSM(dataSM),
-							transitions={'succeeded': 'DETECT_BOTTLES',
+							transitions={'success': 'DETECT_BOTTLES',
                             'aborted' : 'error'})
                                          
         smach.StateMachine.add('DETECT_BOTTLES', DetectBottlesToPick(dataSM),
@@ -91,6 +92,7 @@ def main():
                       
         smach.StateMachine.add('PLACE_TOOL_SM',makePlaceToolSM(dataSM),
 							transitions = {'success':'FAKE_STATE_2',
+                      'need_tool' : 'PICK_TOOL_SM',
 											'error':'error'})              
                                     
         smach.StateMachine.add('FAKE_STATE_2', WaitFake2(),
