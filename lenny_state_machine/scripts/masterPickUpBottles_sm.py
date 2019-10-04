@@ -53,11 +53,11 @@ class DataBetweenStates:
     self.tool_name = "tool_2"
     self.ee_arm_right = "gripper_3f"
     self.ee_arm_left = "gripper_2f"
-    self.planning_group_robot = "arm_left"
-    self.planning_group_tool = "gripper_2f"
+    self.planning_group_robot = "arm_right"
+    self.planning_group_tool = "gripper_3f"
     self.planning_pose = Pose()
     self.change_tool_hand = False
-    self.simulation_mode = "no"
+    self.simulation_mode = "true"
     self.tool_in_arm = " "
 
         

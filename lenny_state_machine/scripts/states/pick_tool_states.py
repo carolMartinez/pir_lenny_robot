@@ -122,11 +122,9 @@ class ChangeTCP(smach.State):
     rospy.wait_for_service('/motion_executor/extendTCP')
     
     try:
-          #Moving ARMS to a HOME position to pick up the tool
           change_TCP= rospy.ServiceProxy('/motion_executor/extendTCP', ExtendTCP)
           
-          ##TODO: Change to make it generic, arm_right should be a variable.... passed
-          ##throug the State Machine.
+          ###TODO: change for Wilson service
           req = ExtendTCPRequest()
           req.arm_name = self.dataSM.planning_group_robot
           req.distance = 0.7

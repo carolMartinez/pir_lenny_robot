@@ -13,22 +13,22 @@
   <!-- Load universal robot description format (URDF) -->
   <group if="$(arg simple_view)">
   <param if="$(arg load_robot_description)" name="$(arg robot_description)" command="$(find xacro)/xacro --inorder '$(find motoman_sda10f_support)/urdf/simple_sda10f.xacro'"/>
-  <param name="$(arg robot_description)_semantic" textfile="$(find lenny_moveit_config)/config/motoman_sda10f.srdf" />
+  <param name="$(arg robot_description)_semantic" textfile="$(find motoman_sda10f_moveit_config)/config/motoman_sda10f.srdf" />
   </group>
   
   <group unless="$(arg simple_view)">
   <param if="$(arg load_robot_description)" name="$(arg robot_description)" command="$(find xacro)/xacro --inorder '$(find motoman_sda10f_support)/urdf/sda10f.xacro'"/>
-  <param name="$(arg robot_description)_semantic" textfile="$(find lenny_moveit_config)/config/motoman_sda10f_full.srdf" />
+  <param name="$(arg robot_description)_semantic" textfile="$(find motoman_sda10f_moveit_config)/config/motoman_sda10f_full.srdf" />
   </group>
   
   <!-- Load updated joint limits (override information from URDF) -->
   <group ns="$(arg robot_description)_planning">
-    <rosparam command="load" file="$(find lenny_moveit_config)/config/joint_limits.yaml"/>
+    <rosparam command="load" file="$(find motoman_sda10f_moveit_config)/config/joint_limits.yaml"/>
   </group>
 
   <!-- Load default settings for kinematics; these settings are overridden by settings in a node's namespace -->
   <group ns="$(arg robot_description)_kinematics">
-    <rosparam command="load" file="$(find lenny_moveit_config)/config/kinematics.yaml"/>
+    <rosparam command="load" file="$(find motoman_sda10f_moveit_config)/config/kinematics.yaml"/>
   </group>
   
 </launch>

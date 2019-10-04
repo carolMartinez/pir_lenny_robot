@@ -11,7 +11,7 @@
   <arg name="controller" unless="$(arg sim)" />
  
   <!-- load the robot_description parameter before launching ROS-I nodes -->
-  <include file="$(find lenny_moveit_config)/launch/planning_context.launch" >
+  <include file="$(find motoman_sda10f_moveit_config)/launch/planning_context.launch" >
     <arg name="simple_view" value="true" />
     <arg name="load_robot_description" value="true" />
   </include>
@@ -34,7 +34,7 @@
   <!-- publish the robot state (tf transforms) -->
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
 
-  <include file="$(find lenny_moveit_config)/launch/move_group.launch">
+  <include file="$(find motoman_sda10f_moveit_config)/launch/move_group.launch">
     <arg name="publish_monitored_planning_scene" value="true" />
   </include>
   

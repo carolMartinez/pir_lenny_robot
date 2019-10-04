@@ -38,7 +38,7 @@ class DetectBottlesToPick(smach.State):
     object1.pick_pose = geometry_msgs.msg.Pose()
     object1.place_pose = geometry_msgs.msg.Pose()
     object1.object_type = "PET" # "HDPE-COLOR etc"
-    object1.task_for_arm = "arm_right" #"arm_left"
+    object1.task_for_arm = "arm_left" #"arm_left"
     object1.tool_type = "vacuum" #"vacuum" 
     
     object2.pick_pose = geometry_msgs.msg.Pose()
@@ -49,7 +49,7 @@ class DetectBottlesToPick(smach.State):
     
     
     ##For testing place this at the begining of the state machine.
-    self.dataSM.tool_in_arm = "arm_left"
+    self.dataSM.tool_in_arm = "arm_right"
     self.dataSM.tool_name = "tool_2"
 
     ## This data will be filled out when wilson message arrive

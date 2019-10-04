@@ -4,5 +4,5 @@
   <param name="moveit_controller_manager"
          value="$(arg moveit_controller_manager)"/>
 
-  <rosparam file="$(find lenny_moveit_config)/config/controllers.yaml"/>
+  <rosparam file="$(find motoman_sda10f_moveit_config)/config/controllers.yaml"/>
 </launch>

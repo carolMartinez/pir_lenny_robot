@@ -51,13 +51,15 @@
 #include <ros/callback_queue.h>
 #include <Eigen/Geometry>
 
+#include <iostream>
+#include <string>
+
 #include "motion_utilities.h"
 
-///TODO: add reading the yaml with information about the move group
 
 using namespace tf;
 
-namespace pirLenny {
+
 
 class MotionExecutor {
 public:
@@ -69,18 +71,11 @@ protected:
 	ros::AsyncSpinner spinner;
 
 private:
-	ros::NodeHandle node_handle_;
-	
-	std::string yaml_path_;
-	int calibration_trajectory_length_;
-	double trajectory_velocity_scaling_;
-	double calibration_trajectory_tolerance_;
 
-	/*ros::ServiceServer execute_coarse_motion_;
-	ros::ServiceServer get_coarse_motion_;
-	ros::ServiceServer execute_fine_motion_;
-	ros::ServiceServer execute_stitched_motion_;
-	ros::ServiceServer execute_calibration_motion_;*/
+	ros::NodeHandle node_handle_;
+  
+  
+	/// SERVICES advertise by the class
 	ros::ServiceServer move_to_predefined_pose_;
 	ros::ServiceServer create_pick_movements_;
 	ros::ServiceServer execute_coarse_motion_;
@@ -91,13 +86,8 @@ private:
   ros::ServiceServer restoreTCP_; 
   
   
-	/*
-	ros::ServiceServer move_to_calibrate_shelf_;
-	ros::ServiceServer move_to_calibrate_tote_;
-	ros::Publisher grasp_pose_visualizer_;
-*/
-
-    moveit::planning_interface::MoveGroupInterface arms_group_;
+	/// MOVE GROUP VARIABLES
+  moveit::planning_interface::MoveGroupInterface arms_group_;
 	moveit::planning_interface::MoveGroupInterface arm_right_group_;
 	moveit::planning_interface::MoveGroupInterface arm_left_group_;
 	moveit::planning_interface::MoveGroupInterface torso_group_;
@@ -106,51 +96,85 @@ private:
 	moveit::planning_interface::MoveGroupInterface * current_moveit_group_;
 	moveit::planning_interface::MoveGroupInterface::Plan plan_;
 	
-	robot_state::RobotStatePtr rs_;
-  const moveit::core::JointModelGroup* joint_model_group_;
+  /// MOTION PARAMETERS
   
+  double approach_distance_; ///DeltaZ position "Pre-grasp" to move to before reaching the object
+  double retreat_distance_;  ///DeltaZ position "Post-grasp" to move to after reaching the object
+  double trajectory_velocity_scaling_; ///Velocity scale when working with the real robot
+  std::string planner_id_; ///Name of the planner to be used. Name according to the OMLP library
+	double planning_time_;
+  double planning_attemps_; ///This is used if the variable replaning = True
+  double position_tolerance_; 
+  double orientation_tolerance_; 
+  double goal_tolerance_; 
+  std::string world_frame_id_;
   
-  moveit::core::RobotStatePtr kinematic_state_;
+  ///END EFFECTOR LINKS
+  std::string tcp_link_name_arm_left_;
+  std::string tcp_link_name_arm_right_;
+  std::string tcp_link_name_;
   
-	MotionUtilities motion_utilities_;
+  std::string wrist_link_name_arm_right_;
+  std::string wrist_link_name_arm_left_;
+  std::string wrist_link_name_;
   
-	geometry_msgs::Pose object_pose_;
- // std::vector<geometry_msgs::Pose> pick_move_poses_;
-  
-  ros::ServiceClient motion_plan_client;
-  
-  
-  bool checkWayPointReachability(const geometry_msgs::Pose& waypoint);
+  ///Transformation variables between TCP and Wrist
+  ///If another ee is used e.g. the tool, this transformation will change, 
+  ///otherwise they are constant.
   tf::StampedTransform tcp_to_wrist_tf_right_;
-   tf::StampedTransform tcp_to_wrist_tf_;  
-  
+  tf::StampedTransform tcp_to_wrist_tf_;  
   tf::StampedTransform tcp_to_wrist_tf_left_; 
+  
+  
+  
+  ///TODO: Check if these variables are really used
+	robot_state::RobotStatePtr rs_;
+  MotionUtilities motion_utilities_;
+	geometry_msgs::Pose object_pose_;
+ 
+ 
+  const moveit::core::JointModelGroup* joint_model_group_; ///Used to request current position
+  
+  
+  moveit::core::RobotStatePtr kinematic_state_; ///Used to request current position ???
+  
+	 
+  ros::ServiceClient motion_plan_client; ///To request a plan
+  
+  
+  ///Function to check if the robot can reach the requested pose.
+  ///TODO: check if it really works, becasue sometimes it says false but the robot
+  ///can reach that position...
+  bool checkWayPointReachability(const geometry_msgs::Pose& waypoint);
+  
+  
+  
 
 protected:
-	/*bool executeCoarseMotion(apc16delft_msgs::ExecuteCoarseMotion::Request & req, apc16delft_msgs::ExecuteCoarseMotion::Response & res);
-	bool getCoarseMotion(apc16delft_msgs::GetCoarseMotion::Request & req, apc16delft_msgs::GetCoarseMotion::Response & res);
-	bool executeStitchedMotion(apc16delft_msgs::ExecuteStitchedMotion::Request & req, apc16delft_msgs::ExecuteStitchedMotion::Response & res);
-	bool executeFineMotion(apc16delft_msgs::ExecuteFineMotion::Request & req, apc16delft_msgs::ExecuteFineMotion::Response & res);
-	bool executeCalibrationMotion(apc16delft_msgs::ExecuteCalibrationMotion::Request & req, apc16delft_msgs::ExecuteCalibrationMotion::Response & res);*/
-	bool moveToPredefinedPose(lenny_msgs::MoveToPredefinedPose::Request & req, lenny_msgs::MoveToPredefinedPose::Response & res);
 	
-	bool createPickMovements(lenny_msgs::CreatePickMovements::Request & req, lenny_msgs::CreatePickMovements::Response & res);
-
-	bool planCoarseMotion(lenny_msgs::PlanCoarseMotion::Request & req, lenny_msgs::PlanCoarseMotion::Response & res);
+   
+	/// Functions of the SERVICES
+  ///This service is used to move to poses predefined in the srdf, like HOME, PICK_HOME etc.
+  bool moveToPredefinedPose(lenny_msgs::MoveToPredefinedPose::Request & req, lenny_msgs::MoveToPredefinedPose::Response & res);
 	
-	bool executeCoarseMotion(lenny_msgs::ExecuteCoarseMotion::Request & req, lenny_msgs::ExecuteCoarseMotion::Response & res);
+  ///This service is used to create 3 poses, the approach, pick, and retreat poses, relative to the pose of the object to pick.
+  ///retreat and approach poses are the same as object's pose but with a +/-deltaZ, this increments are defined in the yaml file
+  ///Input: pose of the object (wrt world), move_group
+  ///Output: a vector of poses with 3 poses Approach,Pick,Retreat. These poses are wrt the wrist link (in case of Lenny, link7) 
+  bool createPickMovements(lenny_msgs::CreatePickMovements::Request & req, lenny_msgs::CreatePickMovements::Response & res);
 	
-  //bool planFineMotion(lenny_msgs::PlanFineMotion::Request & req, lenny_msgs::PlanFineMotion::Response & res);
-	
+  ///This service is used to momve to poses predefined in the srdf, like HOME, PICK_HOME etc.
+  bool planCoarseMotion(lenny_msgs::PlanCoarseMotion::Request & req, lenny_msgs::PlanCoarseMotion::Response & res);
+	bool executeCoarseMotion(lenny_msgs::ExecuteCoarseMotion::Request & req, lenny_msgs::ExecuteCoarseMotion::Response & res);	
 	bool planExecuteFineMotion(lenny_msgs::PlanExecuteFineMotion::Request & req, lenny_msgs::PlanExecuteFineMotion::Response & res);
-
 	bool extendTCP(lenny_msgs::ExtendTCP::Request & req, lenny_msgs::ExtendTCP::Response & res); 
   bool restoreTCP(lenny_msgs::RestoreTCP::Request & req, lenny_msgs::RestoreTCP::Response & res); 
-
-	/*
-	bool moveToCalibrateShelf(apc16delft_msgs::MoveToCalibrateShelf::Request &, apc16delft_msgs::MoveToCalibrateShelf::Response & res);
-	bool moveToCalibrateTote(apc16delft_msgs::MoveToCalibrateTote::Request &, apc16delft_msgs::MoveToCalibrateTote::Response & res);
-	bool checkCalibrationTrajectorySanity(trajectory_msgs::JointTrajectory & motion_trajectory, moveit::planning_interface::MoveGroup* current_group);*/
+  
+  ///This function sets motion parameters of a Moveit group
+  ///Input: move group
+  ///Output: true
+  bool setMoveitGroupParams(moveit::planning_interface::MoveGroupInterface * moveit_group);
+  
 };
 
-}
+
