@@ -20,7 +20,7 @@ MotionExecutor::MotionExecutor() :
 	torso_group_("torso"),
 	sda10f_group_("sda10f"),
 	current_moveit_group_(&arm_right_group_),
-	trajectory_velocity_scaling_(0.1)
+	trajectory_velocity_scale_(0.1)
 {
 	
   spinner.start();
@@ -35,37 +35,14 @@ MotionExecutor::MotionExecutor() :
   restoreTCP_ = node_handle_.advertiseService("restoreTCP", &MotionExecutor::restoreTCP, this);
   motion_plan_client = node_handle_.serviceClient<moveit_msgs::GetMotionPlan>("plan_kinematic_path");
  
-  
-  
-  //+++++ READ PARAMETERS
-	node_handle_.getParam("approach_distance",approach_distance_);
-  node_handle_.getParam("retreat_distance",retreat_distance_);
-  node_handle_.getParam("trajectory_velocity_scaling",trajectory_velocity_scaling_);
-	node_handle_.getParam("planner_id",planner_id_);
-  node_handle_.getParam("planning_time",planning_time_);
-  node_handle_.getParam("planning_attempts",planning_attemps_);
-  node_handle_.getParam("position_tolerance",position_tolerance_);
-  node_handle_.getParam("orientation_tolerance",orientation_tolerance_);
-  node_handle_.getParam("goal_tolerance", goal_tolerance_);
-  node_handle_.getParam("tcp_link_name_arm_left", tcp_link_name_arm_left_);
-  node_handle_.getParam("tcp_link_name_arm_right", tcp_link_name_arm_right_);
-  node_handle_.getParam("wrist_link_name_arm_right", wrist_link_name_arm_right_);
-  node_handle_.getParam("wrist_link_name_arm_left", wrist_link_name_arm_left_);
-  node_handle_.getParam("world_frame_id", world_frame_id_);
-  
-  
-  
-  
-  
-	// Fill cache with all yaml files from directory.
-	//current_moveit_group_->setMaxVelocityScalingFactor(trajectory_velocity_scaling_);
-	//rs_ = current_moveit_group_->getCurrentState();
+ 
+  //+++++ LOAD CONFIG PARAMETERS
+  load_config_params();
   
   
   
   //Initialize the transformation from TCP to Wrist
   //This transformations are used to estimate the pick poses, based on the object's position
-  
   tf::TransformListener listener;
   try
   {
@@ -92,12 +69,15 @@ MotionExecutor::MotionExecutor() :
   }
 
 
-  ///INITIALIZE planning parameters for all groups
+  //INITIALIZE planning parameters for all groups 
+  //It requires all parameters to be loaded
   setMoveitGroupParams(&arms_group_);
   setMoveitGroupParams(&arm_right_group_);
   setMoveitGroupParams(&arm_left_group_);
 	setMoveitGroupParams(&torso_group_);
   setMoveitGroupParams(&sda10f_group_);
+  setMoveitGroupParams(current_moveit_group_);
+  
   
       
 }
@@ -107,13 +87,69 @@ bool MotionExecutor::setMoveitGroupParams(moveit::planning_interface::MoveGroupI
   moveit_group->setPlannerId(planner_id_);
 	moveit_group->allowReplanning(true);
 	moveit_group->setNumPlanningAttempts(planning_attemps_);
-	moveit_group->setMaxVelocityScalingFactor(trajectory_velocity_scaling_);
+	moveit_group->setMaxVelocityScalingFactor(trajectory_velocity_scale_);
   moveit_group->setPlanningTime(planning_time_);
   moveit_group->setGoalTolerance(goal_tolerance_);
   return true;
 	      
 }
 
+
+void MotionExecutor::load_config_params()
+{
+    //ros::NodeHandle nh("~");
+  
+    if(ros::param::get("lenny_task/ee_arm_left",ee_arm_left_)
+    && ros::param::get("lenny_task/ee_arm_right",ee_arm_right_)
+    && ros::param::get("lenny_task/approach_distance",approach_distance_)
+    && ros::param::get("lenny_task/retreat_distance",retreat_distance_)
+    && ros::param::get("lenny_task/trajectory_velocity_scale",trajectory_velocity_scale_)
+    && ros::param::get("lenny_task/planner_id",planner_id_)
+    && ros::param::get("lenny_task/planning_time",planning_time_)
+    && ros::param::get("lenny_task/planning_attempts",planning_attemps_)
+    && ros::param::get("lenny_task/position_tolerance",position_tolerance_)
+    && ros::param::get("lenny_task/orientation_tolerance",orientation_tolerance_)
+    && ros::param::get("lenny_task/goal_tolerance", goal_tolerance_)
+    && ros::param::get("lenny_task/tcp_link_name_arm_left", tcp_link_name_arm_left_)
+    && ros::param::get("lenny_task/tcp_link_name_arm_right", tcp_link_name_arm_right_)
+    && ros::param::get("lenny_task/wrist_link_name_arm_right", wrist_link_name_arm_right_)
+    && ros::param::get("lenny_task/wrist_link_name_arm_left", wrist_link_name_arm_left_)
+    && ros::param::get("lenny_task/world_frame_id", world_frame_id_))
+    {
+
+      //ROS_INFO("Loading pick_and_place parameters");
+      ROS_INFO("Loading pick_and_place parameters");
+      
+      
+    }
+    
+    else
+    {
+        //SET default parameters
+        ee_arm_right_ = "gripper_3f";
+        ee_arm_left_ = "gripper_2f";
+        world_frame_id_ = "torso_base_link";
+        approach_distance_ = 0.05; //5cm
+        retreat_distance_ = 0.1; //10 cm
+        trajectory_velocity_scale_ = 0.1;
+        planner_id_ = "RRTConnectkConfigDefault";
+        planning_time_ = 60.0;
+        planning_attemps_ = 5;
+        position_tolerance_ = 0.01;
+        orientation_tolerance_ = 0.01;
+        goal_tolerance_ = 0.01;
+        tcp_link_name_arm_left_= "arm_left_tcp_link";
+        wrist_link_name_arm_left_= "arm_left_link_7_t";
+        tcp_link_name_arm_right_= "arm_right_tcp_link";
+        wrist_link_name_arm_right_= "arm_right_link_7_t";
+
+         
+      //return false;
+      ROS_INFO("FAILED Loading pick_and_place parameters. LOADING default parameters");
+    }
+
+   
+}
 
 bool MotionExecutor::moveToPredefinedPose(lenny_msgs::MoveToPredefinedPose::Request & req, lenny_msgs::MoveToPredefinedPose::Response & res)
 {
@@ -129,7 +165,12 @@ bool MotionExecutor::moveToPredefinedPose(lenny_msgs::MoveToPredefinedPose::Requ
   if(req.move_group=="sda10f")
 		current_moveit_group_ = &sda10f_group_;
   
-	
+	/*current_moveit_group_->setPlannerId("RRTConnectkConfigDefault");
+  current_moveit_group_->allowReplanning(true);
+	current_moveit_group_->setNumPlanningAttempts(10);
+	current_moveit_group_->setMaxVelocityScalingFactor(0.5);
+  current_moveit_group_->setPlanningTime(10);*/
+  
   current_moveit_group_->setStartState(*current_moveit_group_->getCurrentState());
 
   //Setting up the pose target according to the ones available in the SDRF of the moveit package
@@ -354,7 +395,11 @@ bool MotionExecutor::planCoarseMotion(lenny_msgs::PlanCoarseMotion::Request & re
   if(req.move_group=="sda10f")
 		current_moveit_group_ = &sda10f_group_;
   
-	
+	/*current_moveit_group_->setPlannerId("RRTkConfigDefault");
+  current_moveit_group_->allowReplanning(true);
+	current_moveit_group_->setNumPlanningAttempts(10);
+	current_moveit_group_->setMaxVelocityScalingFactor(0.5);
+  current_moveit_group_->setPlanningTime(10);*/
 
  /// kinematic_state_: it is the current kinematic configuration of the robot
   kinematic_state_ = moveit::core::RobotStatePtr(current_moveit_group_->getCurrentState());
@@ -367,10 +412,15 @@ bool MotionExecutor::planCoarseMotion(lenny_msgs::PlanCoarseMotion::Request & re
 	moveit_msgs::RobotState robot_state;		
 	const robot_state::JointModelGroup *joint_model_group = current_moveit_group_->getCurrentState()->getJointModelGroup(req.move_group);
 
-  geometry_msgs::Pose target_pose;
+
+  std::vector<double> position_tolerances(3,0.01);
+	std::vector<double> orientation_tolerances(3,0.01);
+	geometry_msgs::PoseStamped p;
+	p.header.frame_id = world_frame_id_;
+	geometry_msgs::Pose target_pose;
 	target_pose=req.target_pose;
 
-  geometry_msgs::PoseStamped p;
+  
 	
 
   //Check reachability
@@ -379,27 +429,27 @@ bool MotionExecutor::planCoarseMotion(lenny_msgs::PlanCoarseMotion::Request & re
   
   //if(foundIK)
   //{ 
-      /*
-      p.header.frame_id = world_frame_id_;
+      
+      //p.header.frame_id = world_frame_id_;
       p.pose = target_pose;
       moveit_msgs::Constraints pose_goal = kinematic_constraints::constructGoalConstraints(wrist_link_name_,p,position_tolerance_,
       orientation_tolerance_);
 
       // creating motion plan request
-      moveit_msgs::GetMotionPlan motion_plan;      
+      /*moveit_msgs::GetMotionPlan motion_plan;      
       moveit_msgs::MotionPlanRequest &plan_req = motion_plan.request.motion_plan_request;
       moveit_msgs::MotionPlanResponse &plan_res = motion_plan.response.motion_plan_response;
       
       plan_req.start_state = robot_state;
       plan_req.start_state.is_diff = true;
            
-      plan_req.planner_id = planner_id_;
+      plan_req.planner_id = "RRTkConfigDefault";
       plan_req.group_name = req.move_group;
       plan_req.goal_constraints.push_back(pose_goal);
-      plan_req.allowed_planning_time = planning_time_;
-      plan_req.num_planning_attempts = planning_attemps_;
-      plan_req.max_velocity_scaling_factor = trajectory_velocity_scaling_;
-      */
+      plan_req.allowed_planning_time = 60;
+      plan_req.num_planning_attempts = 10;
+      plan_req.max_velocity_scaling_factor = 0.5;*/
+      
     //std::cout << target_pose << std::endl;
      
       // request motion plan
@@ -418,7 +468,15 @@ bool MotionExecutor::planCoarseMotion(lenny_msgs::PlanCoarseMotion::Request & re
            success = true;
            
       }*/
-       
+      /* current_moveit_group_->setPlanningTime(10);
+        current_moveit_group_->setGoalTolerance(0.01);
+        current_moveit_group_->setGoalOrientationTolerance(0.01);
+        current_moveit_group_->setGoalPositionTolerance(0.01);
+        current_moveit_group_->setMaxVelocityScalingFactor(0.5);
+        current_moveit_group_->setPlannerId("RRTkConfigDefault");
+        current_moveit_group_->setNumPlanningAttempts(5);
+        current_moveit_group_->allowReplanning(true);*/
+        
        
       bool success = (current_moveit_group_->plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
 
@@ -469,8 +527,11 @@ bool MotionExecutor::planExecuteFineMotion(lenny_msgs::PlanExecuteFineMotion::Re
 		current_moveit_group_ = &sda10f_group_;
     
  //Move faster in cartesian space
- current_moveit_group_->setMaxVelocityScalingFactor(0.8);
- 
+current_moveit_group_->setMaxVelocityScalingFactor(0.5);
+/* current_moveit_group_->setPlannerId("RRTConnectkConfigDefault");
+  current_moveit_group_->allowReplanning(true);
+	current_moveit_group_->setNumPlanningAttempts(10);
+	 current_moveit_group_->setPlanningTime(10);*/
    
   moveit_msgs::RobotState robot_state;
 		
@@ -486,8 +547,8 @@ bool MotionExecutor::planExecuteFineMotion(lenny_msgs::PlanExecuteFineMotion::Re
   joint_model_group_ = kmodel->getJointModelGroup(req.move_group);
   
   
-  current_moveit_group_->setPlanningTime(10);
-  current_moveit_group_->allowReplanning(true);
+ /* current_moveit_group_->setPlanningTime(10);
+  current_moveit_group_->allowReplanning(true);*/
   
   ///TODO: check for pose if it is possible
   ///TODO: load parameters for planning from a yaml including for catesian path
@@ -499,14 +560,12 @@ bool MotionExecutor::planExecuteFineMotion(lenny_msgs::PlanExecuteFineMotion::Re
   
   
   //Parameters
-  double plan_time = 5;
-  bool moveit_replan = true;
-  bool avoid_collision = true;
+ 
   
   double cart_step_size = 0.01; //Path interpolation resolution
   //Threshold to prevent jumps in IK solution
   double cart_jump_thr = 0.0; // meters 
-  
+  bool avoid_collision = true;
   
   //Defining poses
   std::vector<geometry_msgs::Pose> waypoints;
@@ -515,8 +574,8 @@ bool MotionExecutor::planExecuteFineMotion(lenny_msgs::PlanExecuteFineMotion::Re
   bool foundIK= false;
   foundIK = checkWayPointReachability(req.target_poses[0]);
  
-  if(foundIK)
-  {
+  //if(foundIK)
+  //{
       waypoints.push_back(req.target_poses[0]);
    
       //Plan cartesian path
@@ -561,12 +620,12 @@ bool MotionExecutor::planExecuteFineMotion(lenny_msgs::PlanExecuteFineMotion::Re
      
       }
       
-  }
-  else
-  {
-    res.success = false;
-    return false;
-  }
+  //}
+  //else
+  //{
+  //  res.success = false;
+  //  return false;
+  //}
 
   
   	
@@ -644,14 +703,27 @@ bool MotionExecutor::restoreTCP(lenny_msgs::RestoreTCP::Request & req, lenny_msg
     ///TODO: do it for the other groups and change the move_home_fuction too
     if(req.arm_name=="arm_right")
     {
-      tcp_to_wrist_tf_=tcp_to_wrist_tf_right_;
-     
+      //tcp_to_wrist_tf_right_.setOrigin(tf::Vector3(tcp_to_wrist_tf_right_.getOrigin().getX(),tcp_to_wrist_tf_right_.getOrigin().getX(),tcp_to_wrist_tf_right_.getOrigin().getX()-0.1));
+      //tcp_to_wrist_tf_right_.setRotation(tcp_to_wrist_tf_.getRotation());
+    
+      ///TODO: this is a fixed transformation, this has to be generic too
+      listener.waitForTransform(tcp_link_name_arm_right_, "arm_right_link_7_t",ros::Time::now(),ros::Duration(3.0f));
+      listener.lookupTransform(tcp_link_name_arm_right_, "arm_right_link_7_t", ros::Time(0), tcp_to_wrist_tf_);
+    
+      
     }
     
     if(req.arm_name=="arm_left")
     {
-      tcp_to_wrist_tf_=tcp_to_wrist_tf_left_;
+      //tcp_to_wrist_tf_right_.setOrigin(tf::Vector3(tcp_to_wrist_tf_right_.getOrigin().getX(),tcp_to_wrist_tf_right_.getOrigin().getX(),tcp_to_wrist_tf_right_.getOrigin().getX()-0.1));
+      //tcp_to_wrist_tf_right_.setRotation(tcp_to_wrist_tf_.getRotation());
+    
+      ///TODO: this is a fixed transformation, this has to be generic too
+      listener.waitForTransform(tcp_link_name_arm_left_, "arm_left_link_7_t",ros::Time::now(),ros::Duration(3.0f));
+      listener.lookupTransform(tcp_link_name_arm_left_, "arm_left_link_7_t", ros::Time(0), tcp_to_wrist_tf_);
+   
     }  
+
 
   }
   catch (tf::TransformException &ex) 
@@ -661,30 +733,6 @@ bool MotionExecutor::restoreTCP(lenny_msgs::RestoreTCP::Request & req, lenny_msg
   }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  ///TODO: do it for the other groups and change the move_home_fuction too
-  if(req.arm_name=="arm_right")
-  {
-    tcp_to_wrist_tf_right_.setOrigin(tf::Vector3(tcp_to_wrist_tf_right_.getOrigin().getX(),tcp_to_wrist_tf_right_.getOrigin().getX(),tcp_to_wrist_tf_right_.getOrigin().getX()+0.1));
-    tcp_to_wrist_tf_right_.setRotation(tcp_to_wrist_tf_.getRotation());
-  }
- 
-  static tf::TransformBroadcaster br;
-  br.sendTransform(tf::StampedTransform(tcp_to_wrist_tf_right_, ros::Time::now(), "world", "newTCP"));
-
   res.success = true;
   return true;
   
@@ -692,12 +740,6 @@ bool MotionExecutor::restoreTCP(lenny_msgs::RestoreTCP::Request & req, lenny_msg
   //  tcp_to_wrist_tf_left_.setOrigin(tf::Vector3(tcp_to_wrist_tf_left_.getOrigin().getX(),tcp_to_wrist_tf_left_.getOrigin().getX(),tcp_to_wrist_tf_left_.getOrigin().getX()-0.1));
   
 }
-
-
-
-
-
-
 
 
 

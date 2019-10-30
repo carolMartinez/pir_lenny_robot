@@ -1,8 +1,7 @@
  <launch>
 
-
   <!-- LOAD TASK PARAMETERS -->
-  <rosparam command="load" file="$(find lenny_data/param/pick_and_place_bottles.yaml"/>
+  <rosparam command="load" file="$(find lenny_data)/param/pick_and_place_bottles.yaml" ns="lenny_task/"/>
   
   
 </launch>

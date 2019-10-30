@@ -1,18 +1,32 @@
-simulation_mode = true
-robot_config = single
+#Parameters task definition
+#This data will be passed by wilson server
+robot_config : single
+task_for_arm : arm_left
+tool_type : gripper
+tool_in_arm : arm_left
+
+
+
 
 #If arm name is empty the system decides the arm
 #If we have to use a specific arm we put the name
-#either arm_right or arm_left
-arm_name = " "
+#either arm_right or arm_left I think this is relevant
+#only for Wilson
+arm_name : ' '
 
 #In simulation tool_2 in real test object_toolX#
-tool_name = tool_2
+tool_name : tool_1
+#tool_name: object_tool_1 #For real tests
 
 #Specifying which gripper is in which arm#
-ee_arm_right = gripper_3f
-ee_arm_left = gripper_2f
+ee_arm_right : gripper_3f
+ee_arm_left : gripper_2f
 
+
+
+#TODO: change these parameters to a different yamls
+#Separate motion parameters from task parameters
+#Parameters required for the motion interface
 #Links of each end effector
 tcp_link_name_arm_left: arm_left_tcp_link
 wrist_link_name_arm_left: arm_left_link_7_t
@@ -26,8 +40,8 @@ world_frame_id: torso_base_link
 #Motion parameters
 approach_distance: 0.2
 retreat_distance: 0.2
-trajectory_velocity_scaling: 0.5
-planner_id: RRTConnectkConfigDefault
+trajectory_velocity_scale: 0.01
+planner_id: 'RRTkConfigDefault'
 planning_time: 60.0
 planning_attemps: 5
 position_tolerance: 0.01

@@ -100,7 +100,7 @@ private:
   
   double approach_distance_; ///DeltaZ position "Pre-grasp" to move to before reaching the object
   double retreat_distance_;  ///DeltaZ position "Post-grasp" to move to after reaching the object
-  double trajectory_velocity_scaling_; ///Velocity scale when working with the real robot
+  double trajectory_velocity_scale_; ///Velocity scale when working with the real robot
   std::string planner_id_; ///Name of the planner to be used. Name according to the OMLP library
 	double planning_time_;
   double planning_attemps_; ///This is used if the variable replaning = True
@@ -117,6 +117,12 @@ private:
   std::string wrist_link_name_arm_right_;
   std::string wrist_link_name_arm_left_;
   std::string wrist_link_name_;
+  
+  ///END EFFECTOR NAMES
+  ///With these names we can know which gripper is in which arm
+  std::string ee_arm_left_;
+  std::string ee_arm_right_;
+  
   
   ///Transformation variables between TCP and Wrist
   ///If another ee is used e.g. the tool, this transformation will change, 
@@ -174,6 +180,13 @@ protected:
   ///Input: move group
   ///Output: true
   bool setMoveitGroupParams(moveit::planning_interface::MoveGroupInterface * moveit_group);
+  
+  ///This function loads config parametrs (yaml file) that define the task. The parameters are related to 
+  ///the links name of the robot, grippers, and motion parameters such as the planner, number of attepts, etc.
+  ///Input: move group
+  ///Output: void
+  void load_config_params();
+  
   
 };
 

@@ -27,19 +27,24 @@ class DetectBottlesToPick(smach.State):
       pick_pose = geometry_msgs.msg.Pose()
       place_pose = geometry_msgs.msg.Pose()
       object_type = "PET" # "HDPE-COLOR etc"
-      task_for_arm = "arm_left" #"arm_left"
-      tool_type = "gripper" #"vacuum" 
+      task_for_arm = rospy.get_param("lenny_task/task_for_arm")
+      tool_type = rospy.get_param("lenny_task/tool_type")
     
-    robot_config = "single" #"dual"
+    
+    
+    
+    robot_config = rospy.get_param("lenny_task/robot_config") #"single" "dual"
     object1 = TaskDefinition()
     object2 = TaskDefinition()
+    task = TaskDefinition()
+    
     
     ## I will fill the data the same way wilson will pass it
     object1.pick_pose = geometry_msgs.msg.Pose()
     object1.place_pose = geometry_msgs.msg.Pose()
     object1.object_type = "PET" # "HDPE-COLOR etc"
-    object1.task_for_arm = "arm_left" #"arm_left"
-    object1.tool_type = "vacuum" #"vacuum" 
+    object1.task_for_arm = rospy.get_param("lenny_task/task_for_arm")
+    object1.tool_type = rospy.get_param("lenny_task/tool_type")
     
     object2.pick_pose = geometry_msgs.msg.Pose()
     object2.place_pose = geometry_msgs.msg.Pose()
@@ -48,53 +53,100 @@ class DetectBottlesToPick(smach.State):
     object2.tool_type = "vacuum" #"vacuum" 
     
     
-    ##For testing place this at the begining of the state machine.
-    self.dataSM.tool_in_arm = "arm_right"
-    self.dataSM.tool_name = "tool_2"
+    ##For testing, place this at the begining of the state machine.
+    #self.dataSM.tool_in_arm = " "
+    #self.dataSM.tool_name = "tool_1"
 
+    
     ## This data will be filled out when wilson message arrive
-    self.dataSM.task_for_arm = object1.task_for_arm
-    
-    
-    self.dataSM.task_tool_type = object1.tool_type
+    #self.dataSM.task_for_arm = object1.task_for_arm
+    #self.dataSM.task_tool_type = object1.tool_type
 
 
-    tool_in_arm = self.dataSM.tool_in_arm
-    tool_name = self.dataSM.tool_name
+    #tool_in_arm = self.dataSM.tool_in_arm
+    #tool_name = self.dataSM.tool_name
     
    
     if (robot_config == "single"):
       
-      if(self.dataSM.task_for_arm == "arm_right"):
-        self.planning_group_tool = "gripper_3f"
+      #+++++++ANALYZING TASK MESSAGE
+      if (object1.task_for_arm == " "):
+        task = object2
+      if (object2.task_for_arm == " "):
+        task = object1
       
-      if(self.dataSM.task_for_arm == "arm_left"):
-        self.planning_group_tool = "gripper_2f"
-        
-    
+      
+      #+++++++ANALYZING TASK INFORMATION
+      
+      #Already filled from yaml
+      if(task.task_for_arm == "arm_right"):
+        self.dataSM.planning_group_tool = self.dataSM.ee_arm_right
+      if(task.task_for_arm == "arm_left"):
+        self.dataSM.planning_group_tool = self.dataSM.ee_arm_left
+      
+      #  self.dataSM.planning_group_tool = "gripper_3f"
+      #  print(self.dataSM.planning_group_tool)
+       
+      
+      ##todo resolver problema que sigue poniendo group tool 2f 
     
       #LEo el primer dato cada uno de los dats que viene de wilson.
-      if(self.dataSM.task_tool_type == "vacuum") and (tool_in_arm == " "):
-        #It means we require the tool
-        self.dataSM.change_tool_hand = False
-        self.dataSM.planning_group = self.dataSM.task_for_arm
-        return 'need_tool' 
-     
-      if(self.dataSM.task_tool_type == "vacuum") and (tool_in_arm == self.dataSM.task_for_arm):
+      if (self.dataSM.tool_in_arm == " "):
+        if (task.tool_type == "vacuum"):
+          #It means we require the tool
+          self.dataSM.change_tool_hand = False
+          self.dataSM.planning_group_robot = task.task_for_arm
+          self.dataSM.task_for_arm = task.task_for_arm
+          return 'need_tool' 
+          
+        if (task.tool_type == "gripper"):
+          #It means we are ready to pick up bottles
+          self.dataSM.change_tool_hand = False
+          self.dataSM.planning_group_robot = self.dataSM.task_for_arm
+          self.dataSM.task_for_arm = task.task_for_arm
+          return 'pick_bottle' 
+       
+      
+      if (self.dataSM.tool_in_arm == task.task_for_arm):
+         
+       #If the tool is in the same arm we need
+       if(task.tool_type == "vacuum"): 
         #It means we do not need to pick up the tool it is already in its hand
-        self.dataSM.planning_group = self.dataSM.task_for_arm
+        self.dataSM.planning_group_robot = task.task_for_arm
         self.dataSM.change_tool_hand = False
+        self.dataSM.task_for_arm = task.task_for_arm
         return 'pick_bottle' 
         
-      if(self.dataSM.task_tool_type == "vacuum") and (tool_in_arm != self.dataSM.task_for_arm) and (tool_in_arm != " "):
-        #It means we need the vacuum but it is in the other hand. So we have to leave the tool
-        #and then pick it up again
-        self.dataSM.change_tool_hand = True
-        self.dataSM.planning_group = self.dataSM.tool_in_arm
+       #If the tool is in the same arm we need But wee need to use the
+       #gripper, then go and leave the tool
+       if(task.tool_type == "gripper"): 
+        self.dataSM.change_tool_hand = False
+        self.dataSM.planning_group_robot = self.dataSM.tool_in_arm
+        self.dataSM.task_for_arm = task.task_for_arm
         return 'leave_tool'
+       
+       
+      if(self.dataSM.tool_in_arm != task.task_for_arm) and self.dataSM.tool_in_arm != " ":
+         
+       # The tool is in another arm.. So, first go a leave the tool and then
+       # go and pick it up with the other arm
+       if(task.tool_type == "vacuum"): 
+       
+        self.dataSM.planning_group_robot = self.dataSM.tool_in_arm
+        self.dataSM.task_for_arm = task.task_for_arm
+        self.dataSM.change_tool_hand = True
+        self.dataSM.task_for_arm = task.task_for_arm
+        return 'leave_tool' 
+       
+       if(task.tool_type == "gripper"): 
+        self.dataSM.planning_group_robot = task.task_for_arm
+        self.dataSM.change_tool_hand = False
+        self.dataSM.task_for_arm = task.task_for_arm
+        return 'pick_bottle' 
+          
     
-    
-    
+      
+      
     
     #if (self.dataSM.tool_in_arm == " " and tool_type == "vacuum"):
     #  self.dataSM.planning_group = "arm_right"

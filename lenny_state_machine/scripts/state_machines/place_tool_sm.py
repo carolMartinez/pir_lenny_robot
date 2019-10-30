@@ -80,7 +80,7 @@ def makePlaceToolSM(dataSM):
                         )              
           
           smach.StateMachine.add('MOVE_HOME_PICK_BOTTLES',MoveHomePickBottles(),
-                        transitions = {'success':'RESTORE_TCP',
+                        transitions = {'success':'success',
                         'error':'error'})
                         
           

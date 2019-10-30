@@ -49,16 +49,48 @@ from geometry_msgs.msg import Pose
 
 class DataBetweenStates:
   def __init__(self):
-
-    self.tool_name = "tool_2"
-    self.ee_arm_right = "gripper_3f"
-    self.ee_arm_left = "gripper_2f"
-    self.planning_group_robot = "arm_right"
-    self.planning_group_tool = "gripper_3f"
+    
+    #Read ROS parameter server to get the parameters that define the task
+    
+    #This parameter is to define the robot configuration: single or dual_arm
+    self.robot_config = rospy.get_param("lenny_task/robot_config")
+    
+    #Name of the vacuum tool. It is used to request the position when calling
+    #the appropriate service
+    self.tool_name = rospy.get_param("lenny_task/tool_name")
+    
+  
+    
+    #Name of the end effector of the right arm
+    self.ee_arm_right = rospy.get_param("lenny_task/ee_arm_right")
+    #Name of the end effector of the left arm
+    self.ee_arm_left = rospy.get_param("lenny_task/ee_arm_left")
+    
+    #Parameter created in the launch file to define if working in simulation mode
+    self.fake_vision = rospy.get_param("lenny_task/fake_vision")
+    
+    #Parameter created in the launch file to define if working with real grippers
+    self.fake_gripper = rospy.get_param("lenny_task/fake_gripper")
+    
+    #These parameters are the ones that define the task.
+    #Planning group
+    self.planning_group_robot = "arm_left"
+    
+    #TODO: add when dual-arm is used
+    if(self.planning_group_robot == "arm_left"):
+      self.planning_group_tool = self.ee_arm_left
+    
+    if(self.planning_group_robot == "arm_right"):
+      self.planning_group_tool = self.ee_arm_right
+    
+    #This is where the pose of the object to pick
     self.planning_pose = Pose()
+    
+    #Variable that defines if the robot has to change the tool
     self.change_tool_hand = False
-    self.simulation_mode = "true"
-    self.tool_in_arm = " "
+
+    #Variable to know in which arm the tool is
+    self.tool_in_arm = rospy.get_param("lenny_task/tool_in_arm") #"single" "dual"
 
         
 def main():
@@ -67,7 +99,7 @@ def main():
 
     sm_root = smach.StateMachine(outcomes=[ 'done', 'error'])
     
-    sm_root.userdata.sm_tool_name = " "
+    #sm_root.userdata.sm_tool_name = " "
     
     
     

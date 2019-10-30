@@ -20,11 +20,15 @@ class DetectTool(smach.State):
 
   def execute(self, userdata):
    
-   #Variables for detecting the tool
-    tool_type = "tool"
-    #tool_name =  userdata.tool_name_input
+   #Variables required by the service that is going to detect the tool
+    if (self.dataSM.fake_vision == "true"):
+        tool_type = "simulation"
+    else:
+        tool_type = "real"
+    
+    #Defined from in the file
     tool_name =  self.dataSM.tool_name
-    print(tool_name)
+    
    
     rospy.wait_for_service('/pir_vision_utils_rviz/get_pose_object')
     #rospy.wait_for_service('/pir_vision_utils_rviz/get_pose_tcp_object')
@@ -34,22 +38,31 @@ class DetectTool(smach.State):
           detect_tool_pose = rospy.ServiceProxy('/pir_vision_utils_rviz/get_pose_object', PirPositionObject)
           #detect_tool_pose = rospy.ServiceProxy('/pir_vision_utils_rviz/get_pose_tcp_object', PirPositionObject)
           
+          
+          
           req = PirPositionObjectRequest()
           req.object_type = tool_type
           req.object_name = tool_name
   
           resp = detect_tool_pose(req)
+          print("after service")
+          #TODO: check because nan return successfull too
           print(resp.status)
+          print(resp.object_pose.position.x )
+          
+          
           #TODO: change Sucesfull for successful
-          if(resp.status=='sucesfull'):
+          #if(resp.status=='sucesfull'):
+          if(resp.object_pose.position.x == 0 and resp.object_pose.position.y == 0 and resp.object_pose.position.z == 0 ):
+            print("ERROR: object position is 0")
+            return 'error' 
+          
+          else:
             #userdata.tool_pose_output = geometry_msgs.msg.Pose()
             userdata.tool_pose_output = resp.object_pose
             userdata.tool_pose_output.orientation.w=0.0;
             #userdata.tool_pose_output.orientation = resp.object_pose.orientation
-            
             return 'success'
-          else:
-            return 'error' 
 
     except rospy.ServiceException as exc:
            rospy.loginfo('Service did not process request: %s', exc)  
@@ -81,13 +94,17 @@ class MoveHomePickTools(smach.State):
           #Moving TORSO to HOME
           #Using movegroup python interface to move only the toros.
           #this because the go to pose goal did not work in c++
-          move_group = moveit_commander.MoveGroupCommander('sda10f')
+          #move_group = moveit_commander.MoveGroupCommander('sda10f')
+          #joint_goal = move_group.get_current_joint_values()
+          move_group = moveit_commander.MoveGroupCommander('torso')
           joint_goal = move_group.get_current_joint_values()
+          #joint_goal[0] = 0
           
           if(self.dataSM.planning_group_robot == "arm_right"):
             joint_goal[0] = 2.9000
           if(self.dataSM.planning_group_robot == "arm_left"):
             joint_goal[0] = 1.6000
+            
             
           plan=move_group.go(joint_goal,wait=True)
           

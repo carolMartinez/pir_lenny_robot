@@ -21,7 +21,7 @@ class DetachObjects(smach.State):
   def execute(self, userdata):
     rospy.loginfo('DETACH OBJECT STATE')
     
-    if( (self.dataSM.tool_in_arm == " ") and (self.dataSM.simulation_mode == "true")):
+    if( (self.dataSM.tool_in_arm == " ") and (self.dataSM.fake_vision == "True")):
       
       ##GET ATTACHed OBJECT
       rospy.wait_for_service('/pir_vision_utils_rviz/get_attached_object')

@@ -85,7 +85,6 @@ class ReinitTCP(smach.State):
                 self.planning_group_tool = "gripper_2f"
               #Now there is no tool in arm
               self.dataSM.tool_in_arm = " "
-              
               return 'pick'
             else:
               return 'success'

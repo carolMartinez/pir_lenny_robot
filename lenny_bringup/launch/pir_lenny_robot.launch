@@ -3,22 +3,23 @@
 
 <!-- start moveit and robot -->
 
-  <arg name="fake_vision" default="true"/>
-  <arg name="fake_gripper" default="true"/>
-  <arg name="fake_robot" default="true"/>
+  <arg name="fake_vision" default="false"/>
+  <arg name="fake_gripper" default="false"/>
+  <arg name="fake_robot" default="false"/>
   
   
 
   <!-- If we are not in simulation mode run XXX -->
-  
+ 
+ <!-- 
   <group if ="$(arg fake_robot)" >
      <include file="$(find lenny_moveit_config)/launch/demo.launch"/>
-  </group>  
+  </group> 
+   
   <group unless ="$(arg fake_robot)" >  
-    <!-- TODO: Include the parameters -->
     <include file="$(find lenny_moveit_config)/launch/moveit_planning_execution.launch"/>
   </group> 
-  
+  -->
   
    <!-- Load parameters -->
    

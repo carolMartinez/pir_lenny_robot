@@ -5,58 +5,48 @@
   <arg name="fake_vision" default="true"/>
   <arg name="fake_gripper" default="true"/>
   <arg name="fake_robot" default="true"/>
+
+  <!-- LOAD TASK DEFINITION PARAMETERS to parameter server -->
+  <include file="$(find lenny_data)/launch/param.launch"/>
+  <!--<rosparam command="load" file="$(find lenny_data)/param/pick_and_place_bottles.yaml"/>-->
+   
+  <param name="lenny_task/fake_vision" value="$(arg fake_vision)" type="string" />
+  <param name="lenny_task/fake_gripper" value="$(arg fake_gripper)" type="string" />
   
   
+  
+  <!-- LOAD  ROBOT-->
   <group if ="$(arg fake_robot)" >
      <include file="$(find lenny_moveit_config)/launch/demo.launch"/>
   </group>  
+  
   <group unless ="$(arg fake_robot)" >  
     <!-- TODO: Include the parameters -->
     <include file="$(find lenny_moveit_config)/launch/moveit_planning_execution.launch"/>
   </group> 
   
-  
-   
-  <!-- LOAD TASK DEFINITION PARAMETERS to parameter server -->
-  <include file="$(find lenny_data)/launch/param.launch"/>
-  
-  
-   <!-- Start the motion executor. -->
-	<node name="motion_executor" pkg="lenny_motion" type="motion_executor" output="screen" />
-
-   
-  
-  <rosparam command="load" file="$(find pick_and_place)/config/motomanSDA10F/pick_and_place_parameters_right.yaml"/>
-  <!-- By default, we are not in debug mode -->
-  <arg name="debug" default="false" />
-
-
-  <!-- If we are not in simulation mode run XXX -->
-  
-  <group if ="$(arg fake_robot)" >
-     <include file="$(find lenny_moveit_config)/launch/demo.launch"/>
-  </group>  
-  <group unless ="$(arg fake_robot)" >  
-    <!-- TODO: Include the parameters -->
-    <include file="$(find lenny_moveit_config)/launch/moveit_planning_execution.launch"/>
+ 
+  <!-- LOAD  GRIPPERS -->
+  <group unless ="$(arg fake_gripper)" >
     
     <!-- Launch ACTION SERVER GRIPPER 2F -->
     <include file="$(find lenny_ee)/robotiq_2f_gripper_control/robotiq_action_server.launch">
       <arg name="comport" default="/dev/ttyUSB1" />
     </include>
-    
+
     <!-- GRIPPER 3F -->
     <!-- Do not forget to execute: sudo chmod 777 /dev/ttyU* -->
     <include file="$(find lenny_ee)/gripper_3f_control/gripper3f_bringup.launch"/>
-    
-    
   </group> 
   
   
-   <!-- Start the motion executor. -->
+ 
+   <!-- START motion executor. -->
 	<node name="motion_executor" pkg="lenny_motion" type="motion_executor" output="screen" />
 
    
+ 
+  
   
   <!-- to load params-->
   <!--<rosparam command="load" file="$(find pick_and_place)/config/motomanSDA10F/pick_and_place_parameters_right.yaml"/>-->

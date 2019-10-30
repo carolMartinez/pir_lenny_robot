@@ -34,9 +34,18 @@ class MoveRobotHome(smach.State):
           #Moving TORSO to HOME
           #Using movegroup python interface to move only the toros.
           #this because the go to pose goal did not work in c++
-          move_group = moveit_commander.MoveGroupCommander('sda10f')
+          
+          # For simulation use:
+          #move_group = moveit_commander.MoveGroupCommander('sda10f')
+          #joint_goal = move_group.get_current_joint_values()
+          #joint_goal[0] = 0
+          
+          #With the real robot use:
+          move_group = moveit_commander.MoveGroupCommander('torso')
           joint_goal = move_group.get_current_joint_values()
           joint_goal[0] = 0
+          
+          
           plan=move_group.go(joint_goal,wait=True)
           
           if(plan):
@@ -153,14 +162,15 @@ class PlanCoarseMove(smach.State):
     rospy.wait_for_service('/motion_executor/plan_coarse_motion')
     
     try:
+      
       plan_coarse_motion=rospy.ServiceProxy('/motion_executor/plan_coarse_motion',PlanCoarseMotion)
 
       req = PlanCoarseMotionRequest()
       req.target_pose.position = userdata.robot_movements_input_approach.position
       req.target_pose.orientation = userdata.robot_movements_input_approach.orientation
-      
+   
       req.move_group = self.dataSM.planning_group_robot
-      
+      print(req.move_group)
       resp = plan_coarse_motion(req)
 
       userdata.coarse_trajectory_output = resp.coarse_trajectory
@@ -205,7 +215,7 @@ class ExecuteCoarseMove(smach.State):
     resp = execute_coarse_move(req)
     
     
-    rospy.loginfo('CREATE COARSE MOVES')
+    rospy.loginfo('EXECUTE COARSE MOVES')
     
     if(resp.success):
 		return 'success'
@@ -229,7 +239,7 @@ class PlanExecutePickFineMove(smach.State):
     
   def execute(self, userdata):
     
-    move_group_ = self.dataSM.planning_group_robot 
+    move_group_robot_ = self.dataSM.planning_group_robot 
     move_group_tool_ = self.dataSM.planning_group_tool
     object_name_ = self.dataSM.tool_name
     
@@ -245,7 +255,7 @@ class PlanExecutePickFineMove(smach.State):
     #Creating the request to approach object
     req = PlanExecuteFineMotionRequest()
     req.target_poses.append(userdata.robot_movements_input_grasp)
-    req.move_group = move_group_
+    req.move_group = move_group_robot_
     resp = plan_execute_fine_move(req)
     
     if(resp.success):
@@ -253,10 +263,21 @@ class PlanExecutePickFineMove(smach.State):
       ##-------------------
       ##GRASP THE OBJECT
       
-      rospy.loginfo('CLOSE GRIPPER')
-      ##add here function
-      time.sleep(1)
+      if(self.dataSM.fake_gripper == "true"):
+        rospy.loginfo('CLOSE GRIPPER')
+        ##add here function
+        time.sleep(2)
+      else:
+        rospy.loginfo('SEND MESSAGE TO REAL GRIPPER')
+        if (move_group_tool_== "gripper_3f"):
+          rospy.loginfo('SEND MESSAGE TO 3 FINGERs GRIPPER')
+          ##add here function
+          time.sleep(2)
     
+        if (move_group_tool_== "gripper_2f"):
+          rospy.loginfo('SEND MESSAGE TO 2 FINGERs GRIPPER')
+          ##add here function
+          time.sleep(2)
       
       ##-------------------
       ##ATTACH OBJECT
@@ -267,16 +288,19 @@ class PlanExecutePickFineMove(smach.State):
 
         req = PirAttachObjectRequest()
         req.group_name = move_group_tool_
+        rospy.loginfo(move_group_tool_)
         req.object_name = object_name_
         resp = attach_object(req)
-        print(resp.status)
+        rospy.loginfo(resp.status)
+        rospy.loginfo(req.object_name)
+        
         
         #TODO: change Sucesfull for successful
         if(resp.status=='sucesfull'):
           print("Object ATTACHED")
         else:
+          rospy.loginfo('ERROR attaching object')
           return 'error'  
-          print("Error attaching object") 
 
       except rospy.ServiceException as exc:
         rospy.loginfo('pyr_vision_system attach_object Service did not process request: %s', exc)  
@@ -294,7 +318,7 @@ class PlanExecutePickFineMove(smach.State):
       #Creating the request to approach object
       req2 = PlanExecuteFineMotionRequest()
       req2.target_poses.append(userdata.robot_movements_input_retreat)
-      req2.move_group = move_group_
+      req2.move_group = move_group_robot_
       resp = plan_execute_fine_move(req2)
     
       if(resp.success):
@@ -359,10 +383,21 @@ class PlanExecutePlaceFineMove(smach.State):
       ##-------------------
       ##LEAVE THE OBJECT
       
-      rospy.loginfo('OPEN GRIPPER')
-      ##add here function
-      time.sleep(1)
+      if(self.dataSM.fake_gripper == "true"):
+        rospy.loginfo('OPEN GRIPPER')
+        ##add here function
+        time.sleep(2)
+      else:
+        rospy.loginfo('SEND MESSAGE TO REAL GRIPPER')
+        if (move_group_tool_== "gripper_3f"):
+          rospy.loginfo('SEND MESSAGE TO 3 FINGERs GRIPPER')
+          ##add here function
+          time.sleep(2)
     
+        if (move_group_tool_== "gripper_2f"):
+          rospy.loginfo('SEND MESSAGE TO 2 FINGERs GRIPPER')
+          ##add here function
+          time.sleep(2)
       
       ##-------------------
       ##DETACH OBJECT
