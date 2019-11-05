@@ -37,6 +37,7 @@ import actionlib
 from state_machines.initialize_master_sm import makeInitMasterSM
 from state_machines.pick_tool_sm import makePickToolSM
 from state_machines.place_tool_sm import makePlaceToolSM
+from state_machines.pick_bottle_sm import makePickBottleSM
 
 from states.detect_bottle_states import DetectBottlesToPick
 
@@ -84,13 +85,19 @@ class DataBetweenStates:
       self.planning_group_tool = self.ee_arm_right
     
     #This is where the pose of the object to pick
-    self.planning_pose = Pose()
+    self.pick_pose = Pose()
+    #This is where the pose of the object to place
+    self.place_pose = Pose()
+    
     
     #Variable that defines if the robot has to change the tool
     self.change_tool_hand = False
 
     #Variable to know in which arm the tool is
     self.tool_in_arm = rospy.get_param("lenny_task/tool_in_arm") #"single" "dual"
+    
+    #To know which object attach to the robot (tool, bottle)
+    self.attach_object_name = ""
 
         
 def main():
@@ -113,21 +120,21 @@ def main():
                             'aborted' : 'error'})
                                          
         smach.StateMachine.add('DETECT_BOTTLES', DetectBottlesToPick(dataSM),
-							transitions={'pick_bottle':'FAKE_STATE_2',
+							transitions={'pick_bottle':'PICK_BOTTLE_SM',
 											'need_tool': 'PICK_TOOL_SM',
                       'leave_tool': 'PLACE_TOOL_SM',
 											'error' : 'error'})
                       
         smach.StateMachine.add('PICK_TOOL_SM',makePickToolSM(dataSM),
-							transitions = {'success':'FAKE_STATE_2',
+							transitions = {'success':'PICK_BOTTLE_SM',
 											'error':'error'})
                       
         smach.StateMachine.add('PLACE_TOOL_SM',makePlaceToolSM(dataSM),
-							transitions = {'success':'FAKE_STATE_2',
+							transitions = {'success':'PICK_BOTTLE_SM',
                       'need_tool' : 'PICK_TOOL_SM',
 											'error':'error'})              
                                     
-        smach.StateMachine.add('FAKE_STATE_2', WaitFake2(),
+        smach.StateMachine.add('PICK_BOTTLE_SM', makePickBottleSM(dataSM),
 							transitions = {'success':'error',
 											'error':'error'})
 								

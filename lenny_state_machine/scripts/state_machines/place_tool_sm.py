@@ -19,6 +19,8 @@ def makePlaceToolSM(dataSM):
   sm.userdata.sm_user_place_pose_grasp = geometry_msgs.msg.Pose()
   sm.userdata.sm_user_place_pose_retreat = geometry_msgs.msg.Pose()
   sm.userdata.sm_user_trajectory = trajectory_msgs.msg.JointTrajectory()
+  
+  dataSM.attach_object_name = dataSM.tool_name 
 
   with sm:
     

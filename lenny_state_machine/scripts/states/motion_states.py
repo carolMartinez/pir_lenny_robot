@@ -95,7 +95,8 @@ class CreatePickMoves(smach.State):
       #if (error==0):
       #pose = geometry_msgs.msg.Pose()
       req = CreatePickMovementsRequest()
-       
+
+   
       req.object_pose = userdata.object_pose_input
       req.move_group = self.dataSM.planning_group_robot
       #translation = trans.transform.translation
@@ -241,7 +242,7 @@ class PlanExecutePickFineMove(smach.State):
     
     move_group_robot_ = self.dataSM.planning_group_robot 
     move_group_tool_ = self.dataSM.planning_group_tool
-    object_name_ = self.dataSM.tool_name
+    object_name_ = self.dataSM.attach_object_name
     
     #Variable to track errors during the different FINE movements
     error=0
@@ -288,11 +289,11 @@ class PlanExecutePickFineMove(smach.State):
 
         req = PirAttachObjectRequest()
         req.group_name = move_group_tool_
-        rospy.loginfo(move_group_tool_)
+        #rospy.loginfo(move_group_tool_)
         req.object_name = object_name_
         resp = attach_object(req)
-        rospy.loginfo(resp.status)
-        rospy.loginfo(req.object_name)
+        #rospy.loginfo(resp.status)
+        #rospy.loginfo(req.object_name)
         
         
         #TODO: change Sucesfull for successful

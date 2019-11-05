@@ -28,7 +28,7 @@ class DetectTool(smach.State):
     
     #Defined from in the file
     tool_name =  self.dataSM.tool_name
-    
+    self.dataSM.attach_object_name = self.dataSM.tool_name 
    
     rospy.wait_for_service('/pir_vision_utils_rviz/get_pose_object')
     #rospy.wait_for_service('/pir_vision_utils_rviz/get_pose_tcp_object')
