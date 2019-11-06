@@ -12,6 +12,7 @@ import tf2_ros
 from lenny_msgs.srv import *
 from pir_vision_msgs.srv import PirAttachObject, PirAttachObjectRequest
 from pir_vision_msgs.srv import PirDetachObject, PirDetachObjectRequest
+from pir_vision_msgs.srv import PirDeleteObject, PirDeleteObjectRequest
 
 
 
@@ -171,9 +172,11 @@ class PlanCoarseMove(smach.State):
       req.target_pose.orientation = userdata.robot_movements_input_approach.orientation
    
       req.move_group = self.dataSM.planning_group_robot
-      print(req.move_group)
+      print("target pose")
+      print(req.target_pose)
       resp = plan_coarse_motion(req)
-
+      
+      
       userdata.coarse_trajectory_output = resp.coarse_trajectory
       
 
@@ -181,6 +184,7 @@ class PlanCoarseMove(smach.State):
       if(resp.success):
         return 'success'
       else:
+        rospy.loginfo('No plan found')
         return 'error' 
         
     except rospy.ServiceException as exc:
@@ -243,6 +247,8 @@ class PlanExecutePickFineMove(smach.State):
     move_group_robot_ = self.dataSM.planning_group_robot 
     move_group_tool_ = self.dataSM.planning_group_tool
     object_name_ = self.dataSM.attach_object_name
+    rospy.loginfo('attach: %s',self.dataSM.attach_object_name)
+    
     
     #Variable to track errors during the different FINE movements
     error=0
@@ -264,22 +270,33 @@ class PlanExecutePickFineMove(smach.State):
       ##-------------------
       ##GRASP THE OBJECT
       
-      if(self.dataSM.fake_gripper == "true"):
-        rospy.loginfo('CLOSE GRIPPER')
-        ##add here function
-        time.sleep(2)
-      else:
-        rospy.loginfo('SEND MESSAGE TO REAL GRIPPER')
-        if (move_group_tool_== "gripper_3f"):
-          rospy.loginfo('SEND MESSAGE TO 3 FINGERs GRIPPER')
+      #This means we have to active vacuum
+      if (self.dataSM.tool_in_arm == move_group_robot_):
+        if(self.dataSM.fake_gripper == "true"):
+          rospy.loginfo('VACUUM ON')
           ##add here function
           time.sleep(2)
-    
-        if (move_group_tool_== "gripper_2f"):
-          rospy.loginfo('SEND MESSAGE TO 2 FINGERs GRIPPER')
-          ##add here function
-          time.sleep(2)
+        else:
+          rospy.loginfo('SEND MESSAGE TO ACTIVATE VACUUM')
       
+      else: #if not we activate the gripper
+      
+        if(self.dataSM.fake_gripper == "true"):
+          rospy.loginfo('CLOSE GRIPPER')
+          ##add here function
+          time.sleep(2)
+        else:
+          rospy.loginfo('SEND MESSAGE TO REAL GRIPPER')
+          if (move_group_tool_== "gripper_3f"):
+            rospy.loginfo('SEND MESSAGE TO 3 FINGERs GRIPPER')
+            ##add here function
+            time.sleep(2)
+      
+          if (move_group_tool_== "gripper_2f"):
+            rospy.loginfo('SEND MESSAGE TO 2 FINGERs GRIPPER')
+            ##add here function
+            time.sleep(2)
+        
       ##-------------------
       ##ATTACH OBJECT
       rospy.wait_for_service('/pir_vision_utils_rviz/attached_object')
@@ -360,10 +377,10 @@ class PlanExecutePlaceFineMove(smach.State):
   def execute(self, userdata):
     
     ##TODO: make it generic group and object name must be passed from SM
-    move_group_ = self.dataSM.planning_group_robot 
+    move_group_robot_ = self.dataSM.planning_group_robot 
     move_group_tool_ = self.dataSM.planning_group_tool
-    object_name_ = self.dataSM.tool_name
-   
+    object_name_ = self.dataSM.attach_object_name
+    
     #Variable to track errors during the different FINE movements
     error=0
     
@@ -376,7 +393,7 @@ class PlanExecutePlaceFineMove(smach.State):
     #Creating the request to approach object
     req = PlanExecuteFineMotionRequest()
     req.target_poses.append(userdata.robot_movements_input_grasp)
-    req.move_group = move_group_
+    req.move_group = move_group_robot_
     resp = plan_execute_fine_move(req)
     
     if(resp.success):
@@ -384,22 +401,34 @@ class PlanExecutePlaceFineMove(smach.State):
       ##-------------------
       ##LEAVE THE OBJECT
       
-      if(self.dataSM.fake_gripper == "true"):
-        rospy.loginfo('OPEN GRIPPER')
-        ##add here function
-        time.sleep(2)
-      else:
-        rospy.loginfo('SEND MESSAGE TO REAL GRIPPER')
-        if (move_group_tool_== "gripper_3f"):
-          rospy.loginfo('SEND MESSAGE TO 3 FINGERs GRIPPER')
+      #STOP VACUUM
+      if (self.dataSM.tool_in_arm == move_group_robot_):
+        if(self.dataSM.fake_gripper == "true"):
+          rospy.loginfo('VACUUM OFF')
           ##add here function
           time.sleep(2)
-    
-        if (move_group_tool_== "gripper_2f"):
-          rospy.loginfo('SEND MESSAGE TO 2 FINGERs GRIPPER')
-          ##add here function
-          time.sleep(2)
+        else:
+          rospy.loginfo('SEND MESSAGE TO STOP VACUUM')
       
+        
+      else: #STOP GRIPPER
+        
+        if(self.dataSM.fake_gripper == "true"):
+          rospy.loginfo('OPEN GRIPPER')
+          ##add here function
+          time.sleep(2)
+        else:
+          rospy.loginfo('SEND MESSAGE TO REAL GRIPPER')
+          if (move_group_tool_== "gripper_3f"):
+            rospy.loginfo('SEND MESSAGE TO 3 FINGERs GRIPPER')
+            ##add here function
+            time.sleep(2)
+      
+          if (move_group_tool_== "gripper_2f"):
+            rospy.loginfo('SEND MESSAGE TO 2 FINGERs GRIPPER')
+            ##add here function
+            time.sleep(2)
+        
       ##-------------------
       ##DETACH OBJECT
       rospy.wait_for_service('/pir_vision_utils_rviz/detach_object')
@@ -423,6 +452,20 @@ class PlanExecutePlaceFineMove(smach.State):
         rospy.loginfo('pyr_vision_system detach_object Service did not process request: %s', exc)  
         return 'error'        
  
+      if(object_name_ == "bottle_1"):
+        ##DELETE OBJECT
+        rospy.wait_for_service('/pir_vision_utils_rviz/delete_object')
+        try:
+          delete_object = rospy.ServiceProxy('/pir_vision_utils_rviz/delete_object',PirDeleteObject)
+          #req = PirDeleteObjectRequest()
+          #req.group_name = move_group_tool_
+          #req.object_name = object_name_
+          
+          resp = delete_object("torso_base_link", "bottle_1")
+        except rospy.ServiceException as exc:
+          rospy.loginfo('pyr_vision_system delete_object Service did not process request: %s', exc)  
+          return 'error'        
+ 
       
       rospy.loginfo('OBJECT DETACHED')
       
@@ -435,7 +478,7 @@ class PlanExecutePlaceFineMove(smach.State):
       #Creating the request to RETREAT
       req2 = PlanExecuteFineMotionRequest()
       req2.target_poses.append(userdata.robot_movements_input_retreat)
-      req2.move_group = move_group_
+      req2.move_group = move_group_robot_
       resp = plan_execute_fine_move(req2)
     
     

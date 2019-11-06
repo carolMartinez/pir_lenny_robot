@@ -182,7 +182,7 @@ bool MotionExecutor::moveToPredefinedPose(lenny_msgs::MoveToPredefinedPose::Requ
 	{
        ROS_ERROR_STREAM("No motion plan found.");
        res.success = false;
-        return false;
+       return false;
     
 	}
 
@@ -283,10 +283,11 @@ bool MotionExecutor::createPickMovements(lenny_msgs::CreatePickMovements::Reques
   //We need the trasnformation between wrist and tcp this is fixed
   //This depends on the move_group
   tf::StampedTransform tcp_to_wrist_tf;
+  
   if (req.move_group == "arm_right")
-    tcp_to_wrist_tf=tcp_to_wrist_tf_right_; 
+    tcp_to_wrist_tf = tcp_to_wrist_tf_right_; 
   if (req.move_group == "arm_left")
-    tcp_to_wrist_tf=tcp_to_wrist_tf_left_; 
+    tcp_to_wrist_tf = tcp_to_wrist_tf_left_; 
     
   
 	std::vector<geometry_msgs::Pose> wrist_poses;
@@ -385,12 +386,12 @@ bool MotionExecutor::planCoarseMotion(lenny_msgs::PlanCoarseMotion::Request & re
 	if(req.move_group=="arm_right")
   {
 		current_moveit_group_ = &arm_right_group_;
-    wrist_link_name_=wrist_link_name_arm_right_;
+    wrist_link_name_ = wrist_link_name_arm_right_;
   }
   if(req.move_group=="arm_left")
   {
 		current_moveit_group_ = &arm_left_group_;
-    wrist_link_name_=wrist_link_name_arm_left_;
+    wrist_link_name_ = wrist_link_name_arm_left_;
   }
   if(req.move_group=="sda10f")
 		current_moveit_group_ = &sda10f_group_;
@@ -418,10 +419,12 @@ bool MotionExecutor::planCoarseMotion(lenny_msgs::PlanCoarseMotion::Request & re
 	geometry_msgs::PoseStamped p;
 	p.header.frame_id = world_frame_id_;
 	geometry_msgs::Pose target_pose;
-	target_pose=req.target_pose;
+	target_pose = req.target_pose;
 
-  
+  std::cout << "target pose: " << std::endl;
 	
+  std::cout << target_pose << std::endl;
+	std::cout << req.move_group << std::endl;
 
   //Check reachability
   bool foundIK = false;
@@ -636,6 +639,7 @@ current_moveit_group_->setMaxVelocityScalingFactor(0.5);
 
 bool MotionExecutor::extendTCP(lenny_msgs::ExtendTCP::Request & req, lenny_msgs::ExtendTCP::Response & res) 
 {
+  
   ROS_DEBUG_STREAM("Received request to EXTEND TCP" );
 
   
@@ -656,6 +660,7 @@ bool MotionExecutor::extendTCP(lenny_msgs::ExtendTCP::Request & req, lenny_msgs:
       listener.waitForTransform("gripper3f_tcp_tool", "arm_right_link_7_t",ros::Time::now(),ros::Duration(3.0f));
       listener.lookupTransform("gripper3f_tcp_tool", "arm_right_link_7_t", ros::Time(0), tcp_to_wrist_tf_);
       
+      tcp_to_wrist_tf_right_ = tcp_to_wrist_tf_;
     }
     
     if(req.arm_name=="arm_left")
@@ -666,8 +671,10 @@ bool MotionExecutor::extendTCP(lenny_msgs::ExtendTCP::Request & req, lenny_msgs:
       ///TODO: this is a fixed transformation, this has to be generic too
       listener.waitForTransform("gripper2f_tcp_tool", "arm_left_link_7_t",ros::Time::now(),ros::Duration(3.0f));
       listener.lookupTransform("gripper2f_tcp_tool", "arm_left_link_7_t", ros::Time(0), tcp_to_wrist_tf_);
-      
+      tcp_to_wrist_tf_left_ = tcp_to_wrist_tf_;
     }  
+    
+    
 
   }
   catch (tf::TransformException &ex) 
@@ -677,9 +684,7 @@ bool MotionExecutor::extendTCP(lenny_msgs::ExtendTCP::Request & req, lenny_msgs:
   }
 
 
-  //static tf::TransformBroadcaster br;
-  //br.sendTransform(tf::StampedTransform(tcp_to_wrist_tf_right_, ros::Time::now(), "world", "newTCP"));
-
+ 
   res.success = true;
   return true;
   
@@ -709,7 +714,7 @@ bool MotionExecutor::restoreTCP(lenny_msgs::RestoreTCP::Request & req, lenny_msg
       ///TODO: this is a fixed transformation, this has to be generic too
       listener.waitForTransform(tcp_link_name_arm_right_, "arm_right_link_7_t",ros::Time::now(),ros::Duration(3.0f));
       listener.lookupTransform(tcp_link_name_arm_right_, "arm_right_link_7_t", ros::Time(0), tcp_to_wrist_tf_);
-    
+      tcp_to_wrist_tf_right_ = tcp_to_wrist_tf_;
       
     }
     
@@ -721,7 +726,7 @@ bool MotionExecutor::restoreTCP(lenny_msgs::RestoreTCP::Request & req, lenny_msg
       ///TODO: this is a fixed transformation, this has to be generic too
       listener.waitForTransform(tcp_link_name_arm_left_, "arm_left_link_7_t",ros::Time::now(),ros::Duration(3.0f));
       listener.lookupTransform(tcp_link_name_arm_left_, "arm_left_link_7_t", ros::Time(0), tcp_to_wrist_tf_);
-   
+      tcp_to_wrist_tf_left_ = tcp_to_wrist_tf_;
     }  
 
 

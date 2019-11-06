@@ -144,7 +144,6 @@ class ChangeTCP(smach.State):
           ###TODO: change for Wilson service
           req = ExtendTCPRequest()
           req.arm_name = self.dataSM.planning_group_robot
-          req.distance = 0.7
           resp = change_TCP(req)
            
           #Update info about the tool that was picked up.

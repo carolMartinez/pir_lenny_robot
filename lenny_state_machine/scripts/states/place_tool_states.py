@@ -36,7 +36,11 @@ class DetectToolMagazine(smach.State):
     userdata.place_pose_output.orientation.x = vector_place_pose[3]
     userdata.place_pose_output.orientation.y = vector_place_pose[4]
     userdata.place_pose_output.orientation.z = vector_place_pose[5]
-    userdata.place_pose_output.orientation.w = vector_place_pose[6]
+    userdata.place_pose_output.orientation.w = 0.0
+    ##TODO: change this check with wilson the tool detection problem
+    #userdata.place_pose_output.orientation.w = vector_place_pose[6]
+    
+    self.dataSM.attach_object_name = self.dataSM.tool_name 
     
     return 'success'
      
@@ -83,10 +87,13 @@ class ReinitTCP(smach.State):
               
               if(self.dataSM.task_for_arm == "arm_left"):
                 self.planning_group_tool = "gripper_2f"
+              
               #Now there is no tool in arm
               self.dataSM.tool_in_arm = " "
+              
               return 'pick'
             else:
+              self.dataSM.tool_in_arm = " "
               return 'success'
                 
           else:

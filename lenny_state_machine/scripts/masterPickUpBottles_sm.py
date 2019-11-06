@@ -38,6 +38,7 @@ from state_machines.initialize_master_sm import makeInitMasterSM
 from state_machines.pick_tool_sm import makePickToolSM
 from state_machines.place_tool_sm import makePlaceToolSM
 from state_machines.pick_bottle_sm import makePickBottleSM
+from state_machines.place_bottle_sm import makePlaceBottleSM
 
 from states.detect_bottle_states import DetectBottlesToPick
 
@@ -99,6 +100,8 @@ class DataBetweenStates:
     #To know which object attach to the robot (tool, bottle)
     self.attach_object_name = ""
 
+
+
         
 def main():
   
@@ -106,7 +109,8 @@ def main():
 
     sm_root = smach.StateMachine(outcomes=[ 'done', 'error'])
     
-    #sm_root.userdata.sm_tool_name = " "
+    sm_root.userdata.sm_user_object_pick_pose = Pose()
+    sm_root.userdata.sm_user_object_place_pose = Pose()
     
     
     
@@ -114,7 +118,6 @@ def main():
     
     with sm_root:
       
-        
         smach.StateMachine.add('INIT_MASTER_SM', makeInitMasterSM(dataSM),
 							transitions={'success': 'DETECT_BOTTLES',
                             'aborted' : 'error'})
@@ -123,7 +126,9 @@ def main():
 							transitions={'pick_bottle':'PICK_BOTTLE_SM',
 											'need_tool': 'PICK_TOOL_SM',
                       'leave_tool': 'PLACE_TOOL_SM',
-											'error' : 'error'})
+											'error' : 'error'},
+              remapping = {'object_pick_pose_output' : 'sm_user_object_pick_pose',
+                        'object_place_pose_output' : 'sm_user_object_place_pose'})
                       
         smach.StateMachine.add('PICK_TOOL_SM',makePickToolSM(dataSM),
 							transitions = {'success':'PICK_BOTTLE_SM',
@@ -135,8 +140,14 @@ def main():
 											'error':'error'})              
                                     
         smach.StateMachine.add('PICK_BOTTLE_SM', makePickBottleSM(dataSM),
-							transitions = {'success':'error',
-											'error':'error'})
+							transitions = {'success':'PLACE_BOTTLE_SM',
+											'error':'error'},
+               remapping = {'object_pick_pose_input' : 'sm_user_object_pick_pose'})
+				
+        smach.StateMachine.add('PLACE_BOTTLE_SM', makePlaceBottleSM(dataSM),
+							transitions = {'success':'DETECT_BOTTLES',
+											'error':'error'},
+               remapping = {'object_place_pose_input' : 'sm_user_object_place_pose'})
 								
 		
     # Create and start the introspection server

@@ -15,7 +15,7 @@ from pir_vision_msgs.srv import *
 class DetectBottlesToPick(smach.State):
   def __init__(self,dataSM):
     smach.State.__init__(self, outcomes=['pick_bottle','error', 'need_tool','leave_tool'],
-     output_keys=['tool_name_output'])
+     output_keys=['object_pick_pose_output', 'object_place_pose_output'])
     self.dataSM = dataSM
     
     
@@ -67,10 +67,7 @@ class DetectBottlesToPick(smach.State):
           object2.tool_type = resp.arm_right.tool_type
           
            
-          #print(object2)
-          ## TODO REMOVE THIS IS ONLY FOR TESTING
-          object2.tool_type = "gripper"
-          object1.tool_type = "gripper"
+          
           
         else:
           return 'error'
@@ -131,30 +128,33 @@ class DetectBottlesToPick(smach.State):
       if (object2.arm_name == " "  or object2.arm_name == ''):
         task = object1
       
-      print("BBB=", task.place_pose)
-      #+++++++ANALYZING TASK INFORMATION
+    #+++++++ANALYZING TASK INFORMATION
       
-      ## TODO: wilson change problem with w value
-      self.dataSM.place_pose = task.place_pose
-      self.dataSM.place_pose.orientation.w=20.0;
+      
+      #print(object2)
+      ## TODO REMOVE THIS IS ONLY FOR TESTING
+      #task.tool_type = "gripper"
+      #task.arm_name = "arm_left"
+      
+      userdata.object_pick_pose_output = task.pick_pose
+      userdata.object_place_pose_output = task.place_pose
+      
+      #self.dataSM.place_pose.orientation.w=20.0;
       self.dataSM.pick_pose = task.pick_pose
-      self.dataSM.pick_pose.orientation.w=20.0;
-      self.dataSM.pick_pose.orientation.z=0.0;
+      self.dataSM.place_pose = task.place_pose
       
+      print("task ARM = ", task.arm_name)
+      print("task TOOL = ", task.tool_type)
+      print("Bottle TYPE = ", task.object_type)
       
-         
-       
+    
       #Already filled from yaml
       if(task.arm_name == "arm_right"):
         self.dataSM.planning_group_tool = self.dataSM.ee_arm_right
       if(task.arm_name == "arm_left"):
         self.dataSM.planning_group_tool = self.dataSM.ee_arm_left
       
-      #  self.dataSM.planning_group_tool = "gripper_3f"
-      #  print(self.dataSM.planning_group_tool)
-       
-      
-      ##todo resolver problema que sigue poniendo group tool 2f 
+     
     
       #LEo el primer dato cada uno de los dats que viene de wilson.
       if (self.dataSM.tool_in_arm == " "):

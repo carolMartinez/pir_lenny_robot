@@ -24,6 +24,7 @@ def makePlaceToolSM(dataSM):
 
   with sm:
     
+          
           smach.StateMachine.add('MOVE_HOME_PLACE_TOOLS',MoveHomePlaceTools(dataSM),
                         transitions = {
                         'success':'DETECT_PLACE_TOOL'}
@@ -31,13 +32,18 @@ def makePlaceToolSM(dataSM):
 
           smach.StateMachine.add('DETECT_PLACE_TOOL',DetectToolMagazine(dataSM),
                         transitions = {
-                        'success':'CREATE_PLACE_MOVES',
+                        'success':'RESTORE_TCP_1',
                         'error':'error'},
                         remapping = {
                         'place_pose_output' : 'sm_user_place_pose'}
                         )
                         
-          print(sm.userdata.sm_user_place_pose)
+          smach.StateMachine.add('RESTORE_TCP_1',ReinitTCP(dataSM),
+                        transitions = {
+                        'success':'CREATE_PLACE_MOVES',
+                        'error':'error',
+                        'pick': 'need_tool'}
+                        )              
 
           smach.StateMachine.add('CREATE_PLACE_MOVES',CreatePickMoves(dataSM),
                         transitions = {
@@ -49,7 +55,7 @@ def makePlaceToolSM(dataSM):
                         'robot_movements_output_grasp' : 'sm_user_place_pose_grasp',
                         'robot_movements_output_retreat' : 'sm_user_place_pose_retreat'}
                         )
-                        
+          print(sm.userdata.sm_user_place_pose_approach)             
           smach.StateMachine.add('PLAN_COARSE',PlanCoarseMove(dataSM),
                         transitions = {
                         'success':'MOVE_COARSE',

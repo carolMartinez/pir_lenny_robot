@@ -47,6 +47,30 @@ class MoveHomePickBottles(smach.State):
     
 
 
+class InitPickBottles(smach.State):
+  def __init__(self,dataSM):
+    smach.State.__init__(self, outcomes=['success','error'])
+    self.dataSM = dataSM
+
+  def execute(self, userdata):
+    
+    rospy.loginfo('INIT PICK BOTTLES')
+    
+    self.dataSM.attach_object_name = "bottle_1"
+    
+    return 'success'
+      
+    if self.preempt_requested():
+      self.service_preempt()
+      return 'error'
+    
+
+
+
+        
+      
+        
+        
 
         
       

@@ -22,7 +22,7 @@ class MoveHomePlaceBottles(smach.State):
     try:
           #Moving ARM to a HOME-PLACE position to place the bottle
           move_to_wait = rospy.ServiceProxy('/motion_executor/move_to_predefined_pose', MoveToPredefinedPose)
-          resp = move_to_wait("OVERHEAD_WAIT",self.task_for_arm)
+          resp = move_to_wait("OVERHEAD_WAIT",self.dataSM.task_for_arm)
            
           #Moving TORSO to HOME
           #Using movegroup python interface to move only the toros.
@@ -32,7 +32,7 @@ class MoveHomePlaceBottles(smach.State):
           #joint_goal[0] = 0
           #plan=move_group.go(joint_goal,wait=True)
           
-          if(plan):
+          if(resp.success):
             return 'success'
           else:
             return 'error' 
