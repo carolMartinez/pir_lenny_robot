@@ -3,7 +3,7 @@
 
   <!-- LAUNCH PARAMETERS -->
   <arg name="fake_vision" default="true"/>
-  <arg name="fake_gripper" default="true"/>
+  <arg name="fake_gripper" default="false"/>
   <arg name="fake_robot" default="true"/>
 
   <!-- LOAD TASK DEFINITION PARAMETERS to parameter server -->
@@ -29,14 +29,14 @@
   <!-- LOAD  GRIPPERS -->
   <group unless ="$(arg fake_gripper)" >
     
-    <!-- Launch ACTION SERVER GRIPPER 2F -->
+    <!-- Launch ACTION SERVER GRIPPER 2F 
     <include file="$(find lenny_ee)/robotiq_2f_gripper_control/robotiq_action_server.launch">
       <arg name="comport" default="/dev/ttyUSB1" />
-    </include>
+    </include>-->
 
     <!-- GRIPPER 3F -->
     <!-- Do not forget to execute: sudo chmod 777 /dev/ttyU* -->
-    <include file="$(find lenny_ee)/gripper_3f_control/gripper3f_bringup.launch"/>
+    <include file="$(find gripper3f_control)/launch/gripper3f_bringup.launch"/>
   </group> 
   
   
@@ -44,8 +44,7 @@
    <!-- START motion executor. -->
 	<node name="motion_executor" pkg="lenny_motion" type="motion_executor" output="screen" />
 
-   
- 
+  
   
   
   <!-- to load params-->

@@ -10,12 +10,87 @@ import moveit_commander
 import tf2_ros
 
 from lenny_msgs.srv import *
+from lenny_ee_msgs.srv import *
 from pir_vision_msgs.srv import PirAttachObject, PirAttachObjectRequest
 from pir_vision_msgs.srv import PirDetachObject, PirDetachObjectRequest
 from pir_vision_msgs.srv import PirDeleteObject, PirDeleteObjectRequest
 
+#import actionlib
+
+from robotiq_2f_gripper_msgs.msg import CommandRobotiqGripperFeedback, CommandRobotiqGripperResult, CommandRobotiqGripperAction, CommandRobotiqGripperGoal
+#from robotiq_2f_gripper_control.robotiq_2f_gripper_driver import Robotiq2FingerGripperDriver as Robotiq
 
 
+
+def setGripper(gripperName, action):
+  
+  if (gripperName == "gripper_3f"):
+    
+    rospy.wait_for_service('/move_gripper_3f/move_gripper_3f')
+  
+    try:
+          move_gripper3f = rospy.ServiceProxy('/move_gripper_3f/move_gripper_3f', MoveGripper3f)
+          
+          if (action=="close"):
+            resp = move_gripper3f("close")
+          if (action=="open"):
+            resp = move_gripper3f("open")
+          
+          if(resp.success):
+            rospy.loginfo('OBJECT GRASPPED')
+            return True
+          else:
+            rospy.loginfo('OBJECT NOT GRASPPED')
+            return False 
+          
+    
+    except rospy.ServiceException as exc:
+           rospy.loginfo('move_gripper_3f Service did not process request: %s', exc)  
+           return False  
+           
+  if (gripperName == "gripper_2f"):
+    
+    action_name = rospy.get_param('~action_name', 'command_robotiq_action')
+    robotiq_client = actionlib.SimpleActionClient(action_name, CommandRobotiqGripperAction)
+   
+  
+    try:
+          # Wait until grippers are ready to take command
+          robotiq_client.wait_for_server()
+
+          move_gripper3f = rospy.ServiceProxy('/move_gripper_3f/move_gripper_3f', MoveGripper3f)
+          goal = CommandRobotiqGripperGoal()
+          result = CommandRobotiqGripperResult()
+          
+          goal.emergency_release = False
+          goal.stop = False
+          
+          if (action=="close"):
+            goal.position = 0.00 #/m
+          if (action=="open"):
+            goal.position = 0.1 #/m
+          
+          goal.speed = 0.1 #m/s
+          goal.force = 5.0 #0-100%
+
+          # Sends the goal to the gripper.
+          robotiq_client.send_goal(goal)
+          # Block processing thread until gripper movement is finished, comment if waiting is not necesary.
+          robotiq_client.wait_for_result()
+          result = robotiq_client.get_result()
+          
+          if(result.is_ready):
+            rospy.loginfo('OBJECT GRASPPED')
+            return True
+          else:
+            rospy.loginfo('OBJECT NOT GRASPPED')
+            return False 
+          
+    
+    except rospy.ServiceException as exc:
+           rospy.loginfo('move_gripper_2f Action Server did not process request: %s', exc)  
+           return False  
+   
 
 class MoveRobotHome(smach.State):
   def __init__(self):
@@ -241,6 +316,8 @@ class PlanExecutePickFineMove(smach.State):
     smach.State.__init__(self, outcomes=['success','error'], input_keys=['robot_movements_input_grasp',
     'robot_movements_input_retreat'])
     self.dataSM = dataSM
+  
+      
     
   def execute(self, userdata):
     
@@ -267,6 +344,9 @@ class PlanExecutePickFineMove(smach.State):
     
     if(resp.success):
       rospy.loginfo('FINE MOTION APPROACH OBJECT')
+      
+      
+      
       ##-------------------
       ##GRASP THE OBJECT
       
@@ -288,9 +368,7 @@ class PlanExecutePickFineMove(smach.State):
         else:
           rospy.loginfo('SEND MESSAGE TO REAL GRIPPER')
           if (move_group_tool_== "gripper_3f"):
-            rospy.loginfo('SEND MESSAGE TO 3 FINGERs GRIPPER')
-            ##add here function
-            time.sleep(2)
+            setGripper("gripper_3f", "close")
       
           if (move_group_tool_== "gripper_2f"):
             rospy.loginfo('SEND MESSAGE TO 2 FINGERs GRIPPER')
@@ -420,10 +498,8 @@ class PlanExecutePlaceFineMove(smach.State):
         else:
           rospy.loginfo('SEND MESSAGE TO REAL GRIPPER')
           if (move_group_tool_== "gripper_3f"):
-            rospy.loginfo('SEND MESSAGE TO 3 FINGERs GRIPPER')
-            ##add here function
-            time.sleep(2)
-      
+            setGripper("gripper_3f", "open")
+            
           if (move_group_tool_== "gripper_2f"):
             rospy.loginfo('SEND MESSAGE TO 2 FINGERs GRIPPER')
             ##add here function

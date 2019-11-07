@@ -63,8 +63,9 @@
   <exec_depend>pir_vision_msgs</exec_depend>
   
   
-    <exec_depend>put_objects_rviz</exec_depend>
-    <exec_depend>vision</exec_depend>
+  <exec_depend>put_objects_rviz</exec_depend>
+  <exec_depend>vision</exec_depend>
+  <exec_depend>gripper_3f_control</exec_depend>
   
 
   <!-- The export tag contains other, unspecified, tags -->
