@@ -133,8 +133,8 @@ class DetectBottlesToPick(smach.State):
       
       #print(object2)
       ## TODO REMOVE THIS IS ONLY FOR TESTING
-      task.tool_type = "gripper"
-      task.arm_name = "arm_right"
+      task.tool_type = "tool"
+      task.arm_name = "arm_left"
       
       userdata.object_pick_pose_output = task.pick_pose
       userdata.object_place_pose_output = task.place_pose

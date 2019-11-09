@@ -29,14 +29,23 @@
   <!-- LOAD  GRIPPERS -->
   <group unless ="$(arg fake_gripper)" >
     
-    <!-- Launch ACTION SERVER GRIPPER 2F 
-    <include file="$(find lenny_ee)/robotiq_2f_gripper_control/robotiq_action_server.launch">
-      <arg name="comport" default="/dev/ttyUSB1" />
-    </include>-->
+    <!-- Launch ACTION SERVER GRIPPER 2F -->
+    <include file="$(find robotiq_2f_gripper_control)/launch/robotiq_action_server.launch">
+      <arg name="comport" default="/dev/ttyUSB3" />
+    </include>
 
     <!-- GRIPPER 3F -->
     <!-- Do not forget to execute: sudo chmod 777 /dev/ttyU* -->
-    <include file="$(find gripper3f_control)/launch/gripper3f_bringup.launch"/>
+    <!--<include file="$(find gripper3f_control)/launch/gripper3f_bringup.launch"> 
+    
+    <arg name="comport" default="/dev/ttyUSB1"/> 
+    </include>-->
+    
+    <!-- VACUUM -->
+    <!-- Do not forget to execute: sudo chmod 777 /dev/ttyU* -->
+    <node name="control_outputs" pkg="motoman_variables" type="control_outputs" output="screen" />
+
+  
   </group> 
   
   

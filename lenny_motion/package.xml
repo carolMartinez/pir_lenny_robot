@@ -60,10 +60,12 @@
   
   <depend>moveit_msgs</depend>
   <depend>lenny_msgs</depend>
+  
   <depend>actionlib</depend>
   <depend>rviz_visual_tools</depend>
-<depend>moveit_visual_tools</depend>
-
+  <depend>moveit_visual_tools</depend>
+  
+  
   
   <build_export_depend>roscpp</build_export_depend>
   <build_export_depend>rospy</build_export_depend>

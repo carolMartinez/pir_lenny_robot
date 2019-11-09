@@ -14,15 +14,17 @@ from lenny_ee_msgs.srv import *
 from pir_vision_msgs.srv import PirAttachObject, PirAttachObjectRequest
 from pir_vision_msgs.srv import PirDetachObject, PirDetachObjectRequest
 from pir_vision_msgs.srv import PirDeleteObject, PirDeleteObjectRequest
+from motoman_msgs.srv import ControlOutputs, ControlOutputsRequest
 
-#import actionlib
+
+import actionlib
 
 from robotiq_2f_gripper_msgs.msg import CommandRobotiqGripperFeedback, CommandRobotiqGripperResult, CommandRobotiqGripperAction, CommandRobotiqGripperGoal
 #from robotiq_2f_gripper_control.robotiq_2f_gripper_driver import Robotiq2FingerGripperDriver as Robotiq
 
 
 
-def setGripper(gripperName, action):
+def setEndEffector(gripperName, action):
   
   if (gripperName == "gripper_3f"):
     
@@ -91,6 +93,35 @@ def setGripper(gripperName, action):
            rospy.loginfo('move_gripper_2f Action Server did not process request: %s', exc)  
            return False  
    
+  if (gripperName == "vacuum"):
+    
+    rospy.wait_for_service('/control_outputs/motoman_variables')
+  
+    try:
+          activate_vacuum = rospy.ServiceProxy('/control_outputs/motoman_variables', ControlOutputs)
+          req = ControlOutputsRequest()
+          req.action = "write"
+          req.variable = 0
+          
+          if (action=="on"):
+            req.turn_on_off = "turn_on"
+            resp = activate_vacuum(req)
+          
+          if (action=="off"):
+            req.turn_on_off = "turn_off"
+            resp = activate_vacuum(req)
+          
+          if(resp.status):
+            rospy.loginfo('VACUUM ACTIVATED')
+            return True
+          else:
+            rospy.loginfo('VACUUM FAILED')
+            return False 
+          
+    
+    except rospy.ServiceException as exc:
+           rospy.loginfo('motoman_variables Service did not process request: %s', exc)  
+           return False  
 
 class MoveRobotHome(smach.State):
   def __init__(self):
@@ -357,7 +388,7 @@ class PlanExecutePickFineMove(smach.State):
           ##add here function
           time.sleep(2)
         else:
-          rospy.loginfo('SEND MESSAGE TO ACTIVATE VACUUM')
+          setEndEffector("vacuum", "on")
       
       else: #if not we activate the gripper
       
@@ -368,12 +399,11 @@ class PlanExecutePickFineMove(smach.State):
         else:
           rospy.loginfo('SEND MESSAGE TO REAL GRIPPER')
           if (move_group_tool_== "gripper_3f"):
-            setGripper("gripper_3f", "close")
+            setEndEffector("gripper_3f", "close")
       
           if (move_group_tool_== "gripper_2f"):
-            rospy.loginfo('SEND MESSAGE TO 2 FINGERs GRIPPER')
-            ##add here function
-            time.sleep(2)
+            setEndEffector("gripper_2f", "close")
+            #time.sleep(2)
         
       ##-------------------
       ##ATTACH OBJECT
@@ -486,7 +516,7 @@ class PlanExecutePlaceFineMove(smach.State):
           ##add here function
           time.sleep(2)
         else:
-          rospy.loginfo('SEND MESSAGE TO STOP VACUUM')
+          setEndEffector("vacuum", "off")
       
         
       else: #STOP GRIPPER
@@ -498,12 +528,11 @@ class PlanExecutePlaceFineMove(smach.State):
         else:
           rospy.loginfo('SEND MESSAGE TO REAL GRIPPER')
           if (move_group_tool_== "gripper_3f"):
-            setGripper("gripper_3f", "open")
+            setEndEffector("gripper_3f", "open")
             
           if (move_group_tool_== "gripper_2f"):
-            rospy.loginfo('SEND MESSAGE TO 2 FINGERs GRIPPER')
-            ##add here function
-            time.sleep(2)
+            setEndEffector("gripper_2f", "open")
+            #time.sleep(2)
         
       ##-------------------
       ##DETACH OBJECT

@@ -3,7 +3,7 @@
 robot_config : single
 task_for_arm : arm_left
 tool_type : gripper
-tool_in_arm : ' '
+tool_in_arm : arm_left
 
 
 
