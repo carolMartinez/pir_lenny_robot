@@ -2,27 +2,27 @@
 
 
   <!-- LAUNCH PARAMETERS -->
-  <arg name="fake_vision" default="true"/>
+  <arg name="fake_vision" default="false"/>
   <arg name="fake_gripper" default="false"/>
-  <arg name="fake_robot" default="true"/>
+  <arg name="fake_robot" default="false"/>
 
   <!-- LOAD TASK DEFINITION PARAMETERS to parameter server -->
   <include file="$(find lenny_data)/launch/param.launch"/>
   <!--<rosparam command="load" file="$(find lenny_data)/param/pick_and_place_bottles.yaml"/>-->
    
-  <param name="lenny_task/fake_vision" value="$(arg fake_vision)" type="string" />
+  <!--<param name="lenny_task/fake_vision" value="$(arg fake_vision)" type="string" />-->
   <param name="lenny_task/fake_gripper" value="$(arg fake_gripper)" type="string" />
   
   
   
-  <!-- LOAD  ROBOT-->
+  <!-- LOAD  ROBOT
   <group if ="$(arg fake_robot)" >
      <include file="$(find lenny_moveit_config)/launch/demo.launch"/>
-  </group>  
+  </group>  -->
   
   <group unless ="$(arg fake_robot)" >  
     <!-- TODO: Include the parameters -->
-    <include file="$(find lenny_moveit_config)/launch/moveit_planning_execution.launch"/>
+    <!-- <include file="$(find lenny_moveit_config)/launch/moveit_planning_execution.launch"/> -->
   </group> 
   
  
@@ -36,10 +36,9 @@
 
     <!-- GRIPPER 3F -->
     <!-- Do not forget to execute: sudo chmod 777 /dev/ttyU* -->
-    <!--<include file="$(find gripper3f_control)/launch/gripper3f_bringup.launch"> 
-    
-    <arg name="comport" default="/dev/ttyUSB1"/> 
-    </include>-->
+    <include file="$(find gripper3f_control)/launch/gripper3f_bringup.launch"> 
+      <arg name="comport" default="/dev/ttyUSB1"/> 
+    </include>
     
     <!-- VACUUM -->
     <!-- Do not forget to execute: sudo chmod 777 /dev/ttyU* -->

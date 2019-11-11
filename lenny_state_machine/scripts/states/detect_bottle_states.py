@@ -37,46 +37,50 @@ class DetectBottlesToPick(smach.State):
     task = TaskDefinition()
    
     
-    if (self.dataSM.fake_vision == "true"):
-      
+    #if (self.dataSM.fake_vision == "true"):
       ###TODO: change name of the service
-      rospy.wait_for_service('/pir_vision_fake_simulation/star_bottle_detection')
+    #rospy.wait_for_service('/pir_vision_fake_simulation/star_bottle_detection')
+    #else:
+    rospy.wait_for_service('/pir_bottle_detection_server/star_bottle_detection')
+    
+    
+    try:
+    
+     # if (self.dataSM.fake_vision == "true"):
+      #bottle_detection = rospy.ServiceProxy('/pir_vision_fake_simulation/star_bottle_detection', PirTaskDefinition)
+      #else:
+      bottle_detection = rospy.ServiceProxy('/pir_bottle_detection_server/star_bottle_detection', PirTaskDefinition)
       
-      try:
-        
-        bottle_detection = rospy.ServiceProxy('/pir_vision_fake_simulation/star_bottle_detection', PirTaskDefinition)
       
-        req = PirTaskDefinition()
-        
-        req.action = "start"
-        
-        resp = bottle_detection("start")
-        
-        #TODO: change sucessfull
-        if (resp.status == "sucesfull"):
-          object1.pick_pose = resp.arm_left.pick_pose
-          object1.place_pose = resp.arm_left.place_pose
-          object1.object_type = resp.arm_left.object_type
-          object1.arm_name = resp.arm_left.arm_name
-          object1.tool_type = resp.arm_left.tool_type
-          
-          object2.pick_pose = resp.arm_right.pick_pose
-          object2.place_pose = resp.arm_right.place_pose
-          object2.object_type = resp.arm_right.object_type
-          object2.arm_name = resp.arm_right.arm_name
-          object2.tool_type = resp.arm_right.tool_type
-          
-           
-          
-          
-        else:
-          return 'error'
+      req = PirTaskDefinition()
       
-      except rospy.ServiceException as exc:
-           rospy.loginfo('Service did not process request: %s', exc)  
-           return 'error'         
-    else:
-      rospy.loginfo('Real Robot')  
+      req.action = "start"
+      
+      resp = bottle_detection("start")
+      
+      #TODO: change sucessfull
+      if (resp.status == "sucesfull"):
+        object1.pick_pose = resp.arm_left.pick_pose
+        object1.place_pose = resp.arm_left.place_pose
+        object1.object_type = resp.arm_left.object_type
+        object1.arm_name = resp.arm_left.arm_name
+        object1.tool_type = resp.arm_left.tool_type
+        
+        object2.pick_pose = resp.arm_right.pick_pose
+        object2.place_pose = resp.arm_right.place_pose
+        object2.object_type = resp.arm_right.object_type
+        object2.arm_name = resp.arm_right.arm_name
+        object2.tool_type = resp.arm_right.tool_type
+        
+      if(resp.status == "error"):
+        rospy.loginfo('Service request NO successfull')  
+        return 'error'
+    
+    except rospy.ServiceException as exc:
+         rospy.loginfo('Service did not process request: %s', exc)  
+         return 'error'         
+    #else:
+    #  rospy.loginfo('Real Robot')  
              
       
     #if I read a ros param and says that the robot has the tool it also
@@ -133,19 +137,23 @@ class DetectBottlesToPick(smach.State):
       
       #print(object2)
       ## TODO REMOVE THIS IS ONLY FOR TESTING
-      task.tool_type = "tool"
-      task.arm_name = "arm_left"
-      
+      task.tool_type = "gripper"
+      #task.arm_name = "arm_left"
+      #task.place_pose.orientation.w=0.0
+            
       userdata.object_pick_pose_output = task.pick_pose
       userdata.object_place_pose_output = task.place_pose
       
       #self.dataSM.place_pose.orientation.w=20.0;
       self.dataSM.pick_pose = task.pick_pose
       self.dataSM.place_pose = task.place_pose
+      self.dataSM.bottle_type = task.object_type
       
       print("task ARM = ", task.arm_name)
       print("task TOOL = ", task.tool_type)
       print("Bottle TYPE = ", task.object_type)
+      print("Pick Pose = ", task.pick_pose)
+      print("Place Pose = ", task.place_pose)
       
     
       #Already filled from yaml

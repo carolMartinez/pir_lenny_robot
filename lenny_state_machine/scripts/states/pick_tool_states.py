@@ -60,7 +60,7 @@ class DetectTool(smach.State):
           else:
             #userdata.tool_pose_output = geometry_msgs.msg.Pose()
             userdata.tool_pose_output = resp.object_pose
-            userdata.tool_pose_output.orientation.w=0.0;
+            userdata.tool_pose_output.orientation.w=0.0
             #userdata.tool_pose_output.orientation = resp.object_pose.orientation
             return 'success'
 
@@ -89,12 +89,12 @@ class MoveHomePickTools(smach.State):
     try:
           #Moving ARMS to a HOME position to pick up the tool
           move_to_wait = rospy.ServiceProxy('/motion_executor/move_to_predefined_pose', MoveToPredefinedPose)
-          resp = move_to_wait("PICK_WAIT","arms")
+          resp = move_to_wait("OVERHEAD_WAIT","arms")
            
           #Moving TORSO to HOME
           #Using movegroup python interface to move only the toros.
           #this because the go to pose goal did not work in c++
-          #move_group = moveit_commander.MoveGroupCommander('sda10f')
+          move_group = moveit_commander.MoveGroupCommander('sda10f')
           #joint_goal = move_group.get_current_joint_values()
           move_group = moveit_commander.MoveGroupCommander('torso')
           joint_goal = move_group.get_current_joint_values()

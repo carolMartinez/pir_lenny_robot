@@ -79,7 +79,7 @@ class MotionUtilities
                       ROS_ERROR_STREAM("Robot states have not been published");
                       continue;
                     }
-                    if(getDistance(current_positions, sda10f_state->position) < 1e-10) 
+                    if(getDistance(current_positions, sda10f_state->position) < 1e-3) 
                     {
                       robot_has_stopped = true;
                       ROS_INFO_STREAM("Robot has stopped. " << i << "dist: " << getDistance(current_positions, sda10f_state->position));

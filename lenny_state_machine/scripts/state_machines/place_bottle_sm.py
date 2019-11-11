@@ -9,6 +9,7 @@ from states.motion_states import *
 from trajectory_msgs.msg import JointTrajectory
 #from states.pick_bottle_states import MoveHomePickBottles
 from states.place_bottle_states import MoveHomePlaceBottles
+from states.place_bottle_states import RotateTorsoPlaceBottles
 
 from geometry_msgs.msg import Pose
        
@@ -34,6 +35,13 @@ def makePlaceBottleSM(dataSM):
     
     
           dataSM.attach_object_name = "bottle_1" 
+          
+          smach.StateMachine.add('ROTATE TORSO',RotateTorsoPlaceBottles(dataSM),
+                        transitions = {
+                        'success':'CREATE_PLACE_MOVES',
+                        'error':'error'}
+                        )
+          
    
           smach.StateMachine.add('CREATE_PLACE_MOVES',CreatePickMoves(dataSM),
                         transitions = {

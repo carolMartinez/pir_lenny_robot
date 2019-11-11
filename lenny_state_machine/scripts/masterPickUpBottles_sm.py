@@ -78,6 +78,9 @@ class DataBetweenStates:
     #Planning group
     self.planning_group_robot = "arm_left"
     
+    self.bottle_type = "PET"
+    
+    
     #TODO: add when dual-arm is used
     if(self.planning_group_robot == "arm_left"):
       self.planning_group_tool = self.ee_arm_left

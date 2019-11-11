@@ -73,7 +73,7 @@ def setEndEffector(gripperName, action):
             goal.position = 0.1 #/m
           
           goal.speed = 0.1 #m/s
-          goal.force = 5.0 #0-100%
+          goal.force = 1.0 #0-100%
 
           # Sends the goal to the gripper.
           robotiq_client.send_goal(goal)
@@ -136,7 +136,7 @@ class MoveRobotHome(smach.State):
     try:
           #Moving ARMS to a HOME position to pick up the tool
           move_to_wait = rospy.ServiceProxy('/motion_executor/move_to_predefined_pose', MoveToPredefinedPose)
-          resp = move_to_wait("PICK_WAIT","arms")
+          resp = move_to_wait("OVERHEAD_WAIT","arms")
            
           #Moving TORSO to HOME
           #Using movegroup python interface to move only the toros.
@@ -361,6 +361,7 @@ class PlanExecutePickFineMove(smach.State):
     #Variable to track errors during the different FINE movements
     error=0
     
+    time.sleep(2)
     ##-------------------
     ##APPROACH OBJECT
     rospy.wait_for_service('/motion_executor/plan_execute_fine_motion')
@@ -372,7 +373,7 @@ class PlanExecutePickFineMove(smach.State):
     req.target_poses.append(userdata.robot_movements_input_grasp)
     req.move_group = move_group_robot_
     resp = plan_execute_fine_move(req)
-    
+    time.sleep(2)
     if(resp.success):
       rospy.loginfo('FINE MOTION APPROACH OBJECT')
       
@@ -386,7 +387,7 @@ class PlanExecutePickFineMove(smach.State):
         if(self.dataSM.fake_gripper == "true"):
           rospy.loginfo('VACUUM ON')
           ##add here function
-          time.sleep(2)
+          #time.sleep(2)
         else:
           setEndEffector("vacuum", "on")
       
@@ -395,7 +396,7 @@ class PlanExecutePickFineMove(smach.State):
         if(self.dataSM.fake_gripper == "true"):
           rospy.loginfo('CLOSE GRIPPER')
           ##add here function
-          time.sleep(2)
+          #time.sleep(2)
         else:
           rospy.loginfo('SEND MESSAGE TO REAL GRIPPER')
           if (move_group_tool_== "gripper_3f"):
@@ -446,7 +447,9 @@ class PlanExecutePickFineMove(smach.State):
       req2.target_poses.append(userdata.robot_movements_input_retreat)
       req2.move_group = move_group_robot_
       resp = plan_execute_fine_move(req2)
-    
+      
+      time.sleep(2)
+      
       if(resp.success):
         rospy.loginfo('FINE MOTION RETREAT WITH OBJECT')
       else:
@@ -491,6 +494,7 @@ class PlanExecutePlaceFineMove(smach.State):
     
     #Variable to track errors during the different FINE movements
     error=0
+    #time.sleep(2)
     
     ##-------------------
     ##APPROACH OBJECT
@@ -514,7 +518,7 @@ class PlanExecutePlaceFineMove(smach.State):
         if(self.dataSM.fake_gripper == "true"):
           rospy.loginfo('VACUUM OFF')
           ##add here function
-          time.sleep(2)
+          #time.sleep(2)
         else:
           setEndEffector("vacuum", "off")
       
@@ -524,7 +528,7 @@ class PlanExecutePlaceFineMove(smach.State):
         if(self.dataSM.fake_gripper == "true"):
           rospy.loginfo('OPEN GRIPPER')
           ##add here function
-          time.sleep(2)
+          #time.sleep(2)
         else:
           rospy.loginfo('SEND MESSAGE TO REAL GRIPPER')
           if (move_group_tool_== "gripper_3f"):
@@ -557,19 +561,19 @@ class PlanExecutePlaceFineMove(smach.State):
         rospy.loginfo('pyr_vision_system detach_object Service did not process request: %s', exc)  
         return 'error'        
  
-      if(object_name_ == "bottle_1"):
+      #if(object_name_ == "bottle_1"):
         ##DELETE OBJECT
-        rospy.wait_for_service('/pir_vision_utils_rviz/delete_object')
-        try:
-          delete_object = rospy.ServiceProxy('/pir_vision_utils_rviz/delete_object',PirDeleteObject)
-          #req = PirDeleteObjectRequest()
-          #req.group_name = move_group_tool_
-          #req.object_name = object_name_
+      #  rospy.wait_for_service('/pir_vision_utils_rviz/delete_object')
+      #  try:
+      #    delete_object = rospy.ServiceProxy('/pir_vision_utils_rviz/delete_object',PirDeleteObject)
+      #    #req = PirDeleteObjectRequest()
+      #    #req.group_name = move_group_tool_
+      #    #req.object_name = object_name_
           
-          resp = delete_object("torso_base_link", "bottle_1")
-        except rospy.ServiceException as exc:
-          rospy.loginfo('pyr_vision_system delete_object Service did not process request: %s', exc)  
-          return 'error'        
+      #    resp = delete_object("torso_base_link", "bottle_1")
+      #  except rospy.ServiceException as exc:
+      #    rospy.loginfo('pyr_vision_system delete_object Service did not process request: %s', exc)  
+      #    return 'error'        
  
       
       rospy.loginfo('OBJECT DETACHED')
@@ -586,7 +590,8 @@ class PlanExecutePlaceFineMove(smach.State):
       req2.move_group = move_group_robot_
       resp = plan_execute_fine_move(req2)
     
-    
+      time.sleep(2)
+      
       if(resp.success):
         rospy.loginfo('FINE MOTION RETREAT WITHOUT OBJECT')
       else:

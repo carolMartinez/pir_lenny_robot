@@ -21,7 +21,7 @@ class MoveHomePickBottles(smach.State):
     try:
           #Moving ARMS to a HOME position to pick up the tool
           move_to_wait = rospy.ServiceProxy('/motion_executor/move_to_predefined_pose', MoveToPredefinedPose)
-          resp = move_to_wait("PICK_WAIT","arms")
+          resp = move_to_wait("OVERHEAD_WAIT","arms")
            
           #Moving TORSO to HOME
           #Using movegroup python interface to move only the toros.

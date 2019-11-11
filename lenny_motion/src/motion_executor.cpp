@@ -131,7 +131,7 @@ void MotionExecutor::load_config_params()
         world_frame_id_ = "torso_base_link";
         approach_distance_ = 0.05; //5cm
         retreat_distance_ = 0.1; //10 cm
-        trajectory_velocity_scale_ = 0.1;
+        trajectory_velocity_scale_ = 0.3;
         planner_id_ = "RRTConnectkConfigDefault";
         planning_time_ = 60.0;
         planning_attemps_ = 5;
@@ -164,7 +164,8 @@ bool MotionExecutor::moveToPredefinedPose(lenny_msgs::MoveToPredefinedPose::Requ
 		current_moveit_group_ = &arm_left_group_;
   if(req.move_group=="sda10f")
 		current_moveit_group_ = &sda10f_group_;
-  
+  if(req.move_group=="torso")
+		current_moveit_group_ = &torso_group_;
 	/*current_moveit_group_->setPlannerId("RRTConnectkConfigDefault");
   current_moveit_group_->allowReplanning(true);
 	current_moveit_group_->setNumPlanningAttempts(10);
@@ -336,6 +337,19 @@ bool MotionExecutor::executeCoarseMotion(lenny_msgs::ExecuteCoarseMotion::Reques
   if(req.move_group=="sda10f")
 		current_moveit_group_ = &sda10f_group_;
   
+	bool stop;
+
+  //This function waits for the robot to stop. With it we avoid the problem
+  //of the error: "motion does not start at current position.."
+  stop = motion_utilities_.waitForRobotToStop();
+	if(!stop)
+	{
+	  
+	}
+	else
+	{
+	
+	}
 	
  
 	moveit::planning_interface::MoveGroupInterface::Plan my_plan;
@@ -354,8 +368,7 @@ bool MotionExecutor::executeCoarseMotion(lenny_msgs::ExecuteCoarseMotion::Reques
   current_moveit_group_->execute(my_plan);
   
   
-  bool stop;
-
+ 
   //This function waits for the robot to stop. With it we avoid the problem
   //of the error: "motion does not start at current position.."
   stop = motion_utilities_.waitForRobotToStop();
@@ -518,6 +531,21 @@ bool MotionExecutor::planCoarseMotion(lenny_msgs::PlanCoarseMotion::Request & re
 
 bool MotionExecutor::planExecuteFineMotion(lenny_msgs::PlanExecuteFineMotion::Request & req, lenny_msgs::PlanExecuteFineMotion::Response & res) 
 {
+  
+  bool stop;
+
+  //This function waits for the robot to stop. With it we avoid the problem
+  //of the error: "motion does not start at current position.."
+  stop = motion_utilities_.waitForRobotToStop();
+	if(!stop)
+	{
+	 
+	}
+	else
+	{
+	 
+	}
+	
   ROS_DEBUG_STREAM("Received request to PLAN fine motion" );
 
 	if(req.move_group=="arms")
@@ -530,7 +558,7 @@ bool MotionExecutor::planExecuteFineMotion(lenny_msgs::PlanExecuteFineMotion::Re
 		current_moveit_group_ = &sda10f_group_;
     
  //Move faster in cartesian space
-current_moveit_group_->setMaxVelocityScalingFactor(0.5);
+current_moveit_group_->setMaxVelocityScalingFactor(0.1);
 /* current_moveit_group_->setPlannerId("RRTConnectkConfigDefault");
   current_moveit_group_->allowReplanning(true);
 	current_moveit_group_->setNumPlanningAttempts(10);
@@ -609,7 +637,6 @@ current_moveit_group_->setMaxVelocityScalingFactor(0.5);
       current_moveit_group_->execute(plan);
       
       
-      bool stop;
       stop = motion_utilities_.waitForRobotToStop();
       if(!stop)
       {
