@@ -72,15 +72,16 @@ class DataBetweenStates:
     self.fake_vision = rospy.get_param("lenny_task/fake_vision")
     
     #Parameter created in the launch file to define if working with real grippers
-    self.fake_gripper = rospy.get_param("lenny_task/fake_gripper")
-    
+    self.fake_gripper = 'true'
+    #TODOOOO: CORREGIR ESTO ESTA LEYENDO EL FAKE GRIPPER FALSE... COHECK QUE DESATACHE CUANDO INICIE... Y BORRE BOTELLA. CUANDO SE PARA LA EJECUCI{ON
+    print("self.fake_gripper:", self.fake_gripper)
     #These parameters are the ones that define the task.
     #Planning group
     self.planning_group_robot = "arm_left"
     
     self.bottle_type = "PET"
     
-    
+    #TODOOOO CHECK... AUTOMATICALLY DEFINE SIMULATION OR REAL WITH TOOL NAME GRIPPER ETC....
     #TODO: add when dual-arm is used
     if(self.planning_group_robot == "arm_left"):
       self.planning_group_tool = self.ee_arm_left

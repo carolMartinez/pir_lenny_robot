@@ -1,0 +1,9 @@
+ <launch>
+
+  <!-- LOAD TASK PARAMETERS -->
+  <rosparam command="load" file="$(find lenny_data)/param/motion_parameters.yaml" ns="motion_parameters/"/>
+  
+  
+</launch>
+
+

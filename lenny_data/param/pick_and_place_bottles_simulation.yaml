@@ -1,5 +1,15 @@
 simulation_mode = true
-robot_config = single
+
+
+#Parameters task definition
+#This data will be passed by wilson server
+#we can overwrite these 
+robot_config : single
+task_for_arm : arm_right
+tool_type : simulation
+tool_in_arm : " "
+
+
 
 #If arm name is empty the system decides the arm
 #If we have to use a specific arm we put the name

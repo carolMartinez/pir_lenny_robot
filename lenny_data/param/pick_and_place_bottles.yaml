@@ -1,9 +1,20 @@
+#Parameters simulation
+simulation_mode : true
+#Tasks
+
+#Fake_vision=true means using simulation rviz
+#fake_gripper =ture means using fake calls to grippers and not loading
+#gripper drivers
+fake_vision : true
+fake_gripper : true
+
+
 #Parameters task definition
 #This data will be passed by wilson server
 robot_config : single
-task_for_arm : arm_left
-tool_type : gripper
-tool_in_arm : ' '
+task_for_arm : arm_right
+tool_type : simulation
+tool_in_arm : " "
 
 
 
@@ -12,13 +23,14 @@ tool_in_arm : ' '
 #If we have to use a specific arm we put the name
 #either arm_right or arm_left I think this is relevant
 #only for Wilson
-arm_name : ' '
+arm_name : " "
 
 #In simulation tool_2 in real test object_toolX#
-tool_name : tool_1
 #tool_name: object_tool_1 #For real tests
+tool_name : tool_1
 
-#Specifying which gripper is in which arm#
+
+#Specifying which gripper is in which arm
 ee_arm_right : gripper_3f
 ee_arm_left : gripper_2f
 

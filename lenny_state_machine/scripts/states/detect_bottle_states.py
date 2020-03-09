@@ -39,25 +39,25 @@ class DetectBottlesToPick(smach.State):
     
     #if (self.dataSM.fake_vision == "true"):
       ###TODO: change name of the service
-    #rospy.wait_for_service('/pir_vision_fake_simulation/star_bottle_detection')
+    rospy.wait_for_service('/pir_vision_fake_simulation/star_bottle_detection')
     #else:
-    rospy.wait_for_service('/pir_bottle_detection_server/star_bottle_detection')
+    #rospy.wait_for_service('/pir_bottle_detection_server/star_bottle_detection')
     
     
     try:
     
-     # if (self.dataSM.fake_vision == "true"):
-      #bottle_detection = rospy.ServiceProxy('/pir_vision_fake_simulation/star_bottle_detection', PirTaskDefinition)
+      #if (self.dataSM.fake_vision == "true"):
+      bottle_detection = rospy.ServiceProxy('/pir_vision_fake_simulation/star_bottle_detection', PirTaskDefinition)
       #else:
-      bottle_detection = rospy.ServiceProxy('/pir_bottle_detection_server/star_bottle_detection', PirTaskDefinition)
+		#bottle_detection = rospy.ServiceProxy('/pir_bottle_detection_server/star_bottle_detection', PirTaskDefinition)
       
-      
+      print("acaa")
       req = PirTaskDefinition()
       
       req.action = "start"
       
       resp = bottle_detection("start")
-      
+      print("acaa: ", resp)
       #TODO: change sucessfull
       if (resp.status == "sucesfull"):
         object1.pick_pose = resp.arm_left.pick_pose
@@ -122,25 +122,32 @@ class DetectBottlesToPick(smach.State):
     #tool_in_arm = self.dataSM.tool_in_arm
     #tool_name = self.dataSM.tool_name
     
-   
+    print("robot_config: ", robot_config)
     if (robot_config == "single"):
       
       #+++++++ANALYZING TASK MESSAGE
-      if (object1.arm_name == " " or object1.arm_name == ''):
+      if (object1.arm_name == " " or object1.arm_name == '' or object1.arm_name == ' '):
         task = object2
-       
-      if (object2.arm_name == " "  or object2.arm_name == ''):
-        task = object1
+      else:
+		task = object1
+ #TODO: check strategy when info comes for both arms... check previous conditions how to work on those cases..
+ 
+#		if (object2.arm_name == " "  or object2.arm_name == '' or object2.arm_name == ' '): 
       
+      #
     #+++++++ANALYZING TASK INFORMATION
       
       
       #print(object2)
       ## TODO REMOVE THIS IS ONLY FOR TESTING
-      task.tool_type = "gripper"
-      #task.arm_name = "arm_left"
+      task.tool_type = "tool" #tool
+      task.arm_name = "arm_right"
       #task.place_pose.orientation.w=0.0
             
+    
+      print("object1.pick_pose = ", object1.pick_pose)
+     
+           
       userdata.object_pick_pose_output = task.pick_pose
       userdata.object_place_pose_output = task.place_pose
       

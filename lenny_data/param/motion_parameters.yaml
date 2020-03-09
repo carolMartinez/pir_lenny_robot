@@ -1,0 +1,27 @@
+
+
+ee_arm_right : gripper_3f
+ee_arm_left : gripper_2f
+
+tcp_link_name_arm_left: arm_left_tcp_link
+wrist_link_name_arm_left: arm_left_link_7_t
+tcp_link_name_arm_right: arm_right_tcp_link
+wrist_link_name_arm_right: arm_right_link_7_t
+
+attach_object_link_left: object_link
+attach_object_link_right: object_link
+world_frame_id: torso_base_link
+
+#Motion parameters
+approach_distance: 0.2
+retreat_distance: 0.2
+trajectory_velocity_scale: 0.01
+planner_id: 'RRTkConfigDefault'
+planning_time: 60.0
+planning_attempts: 5
+position_tolerance: 0.01
+orientation_tolerance: 0.01
+goal_tolerance: 0.001
+
+
+

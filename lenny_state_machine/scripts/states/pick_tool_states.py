@@ -21,6 +21,9 @@ class DetectTool(smach.State):
   def execute(self, userdata):
    
    #Variables required by the service that is going to detect the tool
+    #TODO: ESTOY FORZANDO.. MIRAR QU{E PASA CON LA LECTURA DE PARAMETROS
+    self.dataSM.fake_vision = "true"
+   
     if (self.dataSM.fake_vision == "true"):
         tool_type = "simulation"
     else:
@@ -38,7 +41,9 @@ class DetectTool(smach.State):
           detect_tool_pose = rospy.ServiceProxy('/pir_vision_utils_rviz/get_pose_object', PirPositionObject)
           #detect_tool_pose = rospy.ServiceProxy('/pir_vision_utils_rviz/get_pose_tcp_object', PirPositionObject)
           
-          
+          print("tool_type",tool_type)
+          print("tool_name",tool_name)
+           
           
           req = PirPositionObjectRequest()
           req.object_type = tool_type

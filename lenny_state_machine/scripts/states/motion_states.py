@@ -376,9 +376,7 @@ class PlanExecutePickFineMove(smach.State):
     time.sleep(2)
     if(resp.success):
       rospy.loginfo('FINE MOTION APPROACH OBJECT')
-      
-      
-      
+      print("fake_gripper: ", self.dataSM.fake_gripper)
       ##-------------------
       ##GRASP THE OBJECT
       

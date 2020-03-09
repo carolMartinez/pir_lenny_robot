@@ -59,7 +59,7 @@ MotionExecutor::MotionExecutor() :
   try
   {
     ///TODO: this is a fixed transformation, this has to be generic too
-	  listener.waitForTransform(tcp_link_name_arm_left_, wrist_link_name_arm_left_,ros::Time::now(),ros::Duration(3.0f));
+	listener.waitForTransform(tcp_link_name_arm_left_, wrist_link_name_arm_left_,ros::Time::now(),ros::Duration(3.0f));
     listener.lookupTransform(tcp_link_name_arm_left_, wrist_link_name_arm_left_, ros::Time(0), tcp_to_wrist_tf_left_);
   }
   catch (tf::TransformException &ex) 
@@ -71,26 +71,26 @@ MotionExecutor::MotionExecutor() :
 
   //INITIALIZE planning parameters for all groups 
   //It requires all parameters to be loaded
-  setMoveitGroupParams(&arms_group_);
-  setMoveitGroupParams(&arm_right_group_);
-  setMoveitGroupParams(&arm_left_group_);
+	setMoveitGroupParams(&arms_group_);
+	setMoveitGroupParams(&arm_right_group_);
+	setMoveitGroupParams(&arm_left_group_);
 	setMoveitGroupParams(&torso_group_);
-  setMoveitGroupParams(&sda10f_group_);
-  setMoveitGroupParams(current_moveit_group_);
-  
+	setMoveitGroupParams(&sda10f_group_);
+	setMoveitGroupParams(current_moveit_group_);
+
   
       
 }
 
 bool MotionExecutor::setMoveitGroupParams(moveit::planning_interface::MoveGroupInterface * moveit_group)
 {
-  moveit_group->setPlannerId(planner_id_);
+	moveit_group->setPlannerId(planner_id_);
 	moveit_group->allowReplanning(true);
 	moveit_group->setNumPlanningAttempts(planning_attemps_);
 	moveit_group->setMaxVelocityScalingFactor(trajectory_velocity_scale_);
-  moveit_group->setPlanningTime(planning_time_);
-  moveit_group->setGoalTolerance(goal_tolerance_);
-  return true;
+	moveit_group->setPlanningTime(planning_time_);
+	moveit_group->setGoalTolerance(goal_tolerance_);
+	return true;
 	      
 }
 
@@ -99,22 +99,22 @@ void MotionExecutor::load_config_params()
 {
     //ros::NodeHandle nh("~");
   
-    if(ros::param::get("lenny_task/ee_arm_left",ee_arm_left_)
-    && ros::param::get("lenny_task/ee_arm_right",ee_arm_right_)
-    && ros::param::get("lenny_task/approach_distance",approach_distance_)
-    && ros::param::get("lenny_task/retreat_distance",retreat_distance_)
-    && ros::param::get("lenny_task/trajectory_velocity_scale",trajectory_velocity_scale_)
-    && ros::param::get("lenny_task/planner_id",planner_id_)
-    && ros::param::get("lenny_task/planning_time",planning_time_)
-    && ros::param::get("lenny_task/planning_attempts",planning_attemps_)
-    && ros::param::get("lenny_task/position_tolerance",position_tolerance_)
-    && ros::param::get("lenny_task/orientation_tolerance",orientation_tolerance_)
-    && ros::param::get("lenny_task/goal_tolerance", goal_tolerance_)
-    && ros::param::get("lenny_task/tcp_link_name_arm_left", tcp_link_name_arm_left_)
-    && ros::param::get("lenny_task/tcp_link_name_arm_right", tcp_link_name_arm_right_)
-    && ros::param::get("lenny_task/wrist_link_name_arm_right", wrist_link_name_arm_right_)
-    && ros::param::get("lenny_task/wrist_link_name_arm_left", wrist_link_name_arm_left_)
-    && ros::param::get("lenny_task/world_frame_id", world_frame_id_))
+    if(ros::param::get("/motion_parameters/ee_arm_left",ee_arm_left_)
+    && ros::param::get("/motion_parameters/ee_arm_right",ee_arm_right_)
+    && ros::param::get("/motion_parameters/approach_distance",approach_distance_)
+    && ros::param::get("/motion_parameters/retreat_distance",retreat_distance_)
+    && ros::param::get("/motion_parameters/trajectory_velocity_scale",trajectory_velocity_scale_)
+    && ros::param::get("/motion_parameters/planner_id",planner_id_)
+    && ros::param::get("/motion_parameters/planning_time",planning_time_)  
+    && ros::param::get("/motion_parameters/planning_attempts",planning_attemps_)
+    && ros::param::get("/motion_parameters/position_tolerance",position_tolerance_)
+    && ros::param::get("/motion_parameters/orientation_tolerance",orientation_tolerance_)
+    && ros::param::get("/motion_parameters/goal_tolerance", goal_tolerance_)
+    && ros::param::get("/motion_parameters/tcp_link_name_arm_left", tcp_link_name_arm_left_)
+    && ros::param::get("/motion_parameters/tcp_link_name_arm_right", tcp_link_name_arm_right_)
+    && ros::param::get("/motion_parameters/wrist_link_name_arm_right", wrist_link_name_arm_right_)
+    && ros::param::get("/motion_parameters/wrist_link_name_arm_left", wrist_link_name_arm_left_)
+    && ros::param::get("/motion_parameters/world_frame_id", world_frame_id_))
     {
 
       //ROS_INFO("Loading pick_and_place parameters");
